@@ -7,82 +7,126 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-100 min-h-screen flex flex-col font-sans">
 
 <!-- HEADER -->
-<header class="bg-white border-b shadow-sm">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-        <h1 class="text-xl font-semibold text-gray-800">MicroDZ Dashboard</h1>
+<header class="bg-white border-b shadow-sm sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold shadow-sm">M</div>
+            <h1 class="text-xl font-bold text-gray-800 tracking-tight">MicroDZ <span class="text-blue-600">IoT</span></h1>
+        </div>
         <button id="logoutBtn"
-            class="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
+            class="text-sm font-medium bg-gray-100 hover:bg-red-500 hover:text-white text-gray-700 px-5 py-2 rounded-full transition-all duration-200 shadow-sm border border-gray-200">
             Logout
         </button>
     </div>
 </header>
 
 <!-- MAIN -->
-<main class="flex-grow max-w-5xl mx-auto px-4 py-6">
+<main class="flex-grow max-w-6xl mx-auto px-4 py-6 w-full">
 
-    <!-- USER INFO -->
-    <div class="bg-white rounded shadow p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-2">Informasi Akun</h2>
-        <p class="text-gray-700">Email: <span id="userEmail" class="font-medium text-blue-600">-</span></p>
-        <p class="text-gray-700 mt-1">Role: <span id="roleInfo" class="font-semibold">-</span></p>
+    <!-- USER INFO & WELCOME -->
+    <div class="bg-gradient-to-br from-blue-700 to-indigo-800 rounded-2xl shadow-xl p-8 mb-8 text-white relative overflow-hidden">
+        <div class="relative z-10">
+            <h2 class="text-3xl font-extrabold mb-2">Selamat Datang!</h2>
+            <div class="flex flex-wrap items-center gap-6 text-sm">
+                <div class="flex items-center gap-2 opacity-90">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span id="userEmail" class="font-mono bg-white/20 px-3 py-1 rounded-lg backdrop-blur-sm tracking-wide">Memuat...</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="roleBadge" class="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
+                        <span id="roleInfo">-</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- CLIENT ACCESS SECTION (Hanya muncul jika ada link dari admin) -->
-    <div id="clientLinkSection" class="bg-blue-600 rounded shadow p-6 mb-6 hidden">
-        <h3 class="text-white font-semibold mb-3">Akses Khusus Anda</h3>
-        <p class="text-blue-100 text-sm mb-4">Admin telah memberikan akses link khusus untuk akun Anda.</p>
-        <a id="clientActionBtn" href="#" target="_blank" 
-           class="inline-block bg-white text-blue-600 font-bold py-3 px-6 rounded-lg shadow hover:bg-gray-100 transition-colors">
-            Buka Link Akses Saya →
-        </a>
-    </div>
+    <!-- MENU UTAMA USER (Hanya muncul jika Role = User) -->
+    <div id="userMenuSection" class="mb-10">
+        <h3 class="font-bold text-gray-800 mb-5 flex items-center gap-3 text-xl">
+            Layanan Monitoring
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Tombol Monitoring Dinamis (Direct Link) -->
+            <div id="monitoringBtn" class="p-6 border-2 rounded-2xl bg-white flex flex-col gap-4 group cursor-not-allowed opacity-50 transition-all duration-300 border-dashed border-gray-300 shadow-sm hover:shadow-md">
+                <div class="flex justify-between items-start">
+                    <div class="p-3 bg-gray-100 rounded-xl" id="monitoringIconBg">
+                        <svg id="monitoringIcon" xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <span id="monitoringBadge" class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-gray-200 text-gray-500 tracking-wider">Terkunci</span>
+                </div>
+                <div>
+                    <div class="font-extrabold text-gray-800 text-lg">Buka Dashboard</div>
+                    <div id="monitoringStatus" class="text-xs text-gray-500 mt-1 leading-relaxed">Menunggu link akses dari admin.</div>
+                </div>
+            </div>
 
-    <!-- MENU UMUM -->
-    <div class="bg-white rounded shadow p-6 mb-6 text-gray-700">
-        <h3 class="font-semibold mb-2">Menu Utama</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Monitoring Perangkat</div>
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Kontrol Sistem</div>
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Data & Laporan</div>
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Pengaturan Akun</div>
+            <!-- Bantuan -->
+            <div class="p-6 border border-gray-100 bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all cursor-pointer">
+                <div class="p-3 bg-teal-50 rounded-xl w-fit mb-4 text-teal-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="font-extrabold text-gray-800 text-lg">Pusat Bantuan</div>
+                <div class="text-xs text-gray-500 mt-1">Panduan penggunaan sistem IoT.</div>
+            </div>
         </div>
     </div>
 
-    <!-- ADMIN PANEL -->
-    <div id="adminPanel" class="bg-white border border-yellow-300 rounded shadow p-6 hidden">
-        <h3 class="font-semibold text-yellow-800 mb-4 border-b pb-2">Panel Administrasi - Atur Link Klien</h3>
+    <!-- ADMIN PANEL - MANAJEMEN USER -->
+    <div id="adminPanel" class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden hidden">
+        <div class="p-8 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <h3 class="font-black text-gray-800 text-xl uppercase tracking-tighter flex items-center gap-2">
+                    <span class="w-2 h-6 bg-yellow-400 rounded-full"></span>
+                    Pengaturan Link Monitoring Klien
+                </h3>
+                <p class="text-xs text-gray-500 mt-1">Berikan akses link dashboard ke masing-masing user terdaftar.</p>
+            </div>
+            <div id="adminStatus" class="text-xs font-bold transition-all"></div>
+        </div>
         
-        <div class="space-y-4 max-w-md">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email Klien</label>
-                <input type="email" id="adminTargetEmail" placeholder="contoh: user@gmail.com" 
-                       class="w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:ring-yellow-400 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">URL / Link Tujuan</label>
-                <input type="url" id="adminTargetUrl" placeholder="https://link-tujuan.com" 
-                       class="w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:ring-yellow-400 outline-none">
-            </div>
-            <button id="saveLinkBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded text-sm">
-                Simpan Link untuk User
-            </button>
-            <p id="adminStatus" class="text-xs font-medium mt-2"></p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="bg-gray-100/50 text-gray-600 uppercase text-[10px] font-black tracking-widest border-b">
+                        <th class="px-8 py-5">Email User</th>
+                        <th class="px-8 py-5">Status Link</th>
+                        <th class="px-8 py-5 min-w-[350px]">Link Website (URL)</th>
+                        <th class="px-8 py-5 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody" class="divide-y divide-gray-100">
+                    <tr>
+                        <td colspan="4" class="px-8 py-16 text-center text-gray-400 animate-pulse italic">
+                            Mengambil daftar user...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
 </main>
 
-<footer class="text-center text-xs text-gray-500 py-4">
-    © 2025 MicroDZ
+<footer class="text-center text-[11px] text-gray-400 py-8 border-t bg-white/50 backdrop-blur-sm mt-auto font-medium">
+    &copy; 2025 <span class="text-blue-600 font-bold">MicroDZ</span> — IoT Solutions
 </footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
@@ -95,84 +139,156 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const appId = "microdz-app-1"; // ID unik untuk identifikasi data aplikasi Anda
+const appId = "microdz-app-1";
+let currentLink = null;
+let isLoggingOut = false;
 
-onAuthStateChanged(auth, (user) => {
+// 🟢 AUTHENTICATION & ROLE DETECTION
+onAuthStateChanged(auth, async (user) => {
+    if (isLoggingOut) return;
     if (!user) {
-        window.location.href = "index.html";
+        window.location.assign("index.html");
         return;
     }
 
     const email = user.email;
     document.getElementById("userEmail").innerText = email;
-    let role = "User";
 
-    // 1. CEK ROLE ADMIN
+    // Catat user ke koleksi registeredUsers
+    const userDocId = email.replace(/\./g, "-");
+    const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'registeredUsers', userDocId);
+    await setDoc(userRef, { email: email, lastSeen: new Date().toISOString() }, { merge: true });
+
     if (email === "admin.microdz@gmail.com") {
-        role = "Admin";
+        document.getElementById("roleInfo").innerText = "Admin Utama";
         document.getElementById("adminPanel").classList.remove("hidden");
+        document.getElementById("userMenuSection").classList.add("hidden");
+        loadAdminTable();
+    } else {
+        document.getElementById("roleInfo").innerText = "Klien Aktif";
+        setupUserRedirect(email);
     }
-
-    document.getElementById("roleInfo").innerText = role;
-
-    // 2. AMBIL LINK KHUSUS USER DARI FIRESTORE (Realtime)
-    // Path: artifacts/appId/public/data/clientLinks/email_user
-    // Gunakan email sebagai ID dokumen (replace titik dengan dash agar aman di path)
-    const docId = email.replace(/\./g, "-");
-    const linkDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'clientLinks', docId);
-
-    onSnapshot(linkDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const section = document.getElementById("clientLinkSection");
-            const btn = document.getElementById("clientActionBtn");
-            
-            section.classList.remove("hidden");
-            btn.href = data.url;
-        }
-    }, (error) => {
-        console.error("Gagal memuat link klien:", error);
-    });
 });
 
-// 3. FUNGSI ADMIN SIMPAN LINK
-document.getElementById("saveLinkBtn").addEventListener("click", async () => {
-    const targetEmail = document.getElementById("adminTargetEmail").value.trim().toLowerCase();
-    const targetUrl = document.getElementById("adminTargetUrl").value.trim();
-    const statusText = document.getElementById("adminStatus");
+// 📡 SISI USER: REAL-TIME MONITORING
+function setupUserRedirect(email) {
+    const docId = email.replace(/\./g, "-");
+    const linkRef = doc(db, 'artifacts', appId, 'public', 'data', 'clientLinks', docId);
 
-    if (!targetEmail || !targetUrl) {
-        statusText.innerText = "Harap isi email dan link!";
-        statusText.className = "text-red-600 text-xs mt-2";
+    onSnapshot(linkRef, (snap) => {
+        const btn = document.getElementById("monitoringBtn");
+        const status = document.getElementById("monitoringStatus");
+        const icon = document.getElementById("monitoringIcon");
+        const badge = document.getElementById("monitoringBadge");
+        const bgIcon = document.getElementById("monitoringIconBg");
+
+        if (snap.exists()) {
+            currentLink = snap.data().url;
+            btn.className = "p-6 border-2 rounded-2xl bg-white flex flex-col gap-4 group cursor-pointer transition-all duration-300 border-blue-500 shadow-xl hover:-translate-y-1";
+            status.innerText = "Klik untuk membuka dashboard";
+            status.className = "text-xs text-blue-600 font-bold";
+            icon.className = "h-7 w-7 text-blue-600 group-hover:scale-110 transition-all";
+            bgIcon.className = "p-3 bg-blue-50 rounded-xl";
+            badge.innerText = "Aktif";
+            badge.className = "text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow-md shadow-blue-200";
+        } else {
+            currentLink = null;
+            // Default locked state (sudah ada di HTML)
+        }
+    });
+}
+
+// KLIK TOMBOL OLEH USER
+document.getElementById("monitoringBtn").addEventListener("click", () => {
+    if (currentLink) {
+        const url = currentLink.startsWith('http') ? currentLink : 'https://' + currentLink;
+        window.open(url, "_blank");
+    }
+});
+
+// 📋 SISI ADMIN: MANAJEMEN TABEL
+function loadAdminTable() {
+    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'registeredUsers'));
+    
+    onSnapshot(q, (snapshot) => {
+        const tableBody = document.getElementById("userTableBody");
+        tableBody.innerHTML = "";
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data.email === "admin.microdz@gmail.com") return;
+
+            const docId = data.email.replace(/\./g, "-");
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-blue-50/50 transition-colors";
+            
+            tr.innerHTML = `
+                <td class="px-8 py-6">
+                    <div class="font-bold text-gray-800 text-sm">${data.email}</div>
+                    <div class="text-[9px] text-gray-400 uppercase tracking-tighter">ID: ${docId}</div>
+                </td>
+                <td class="px-8 py-6" id="status-${docId}">
+                    <span class="text-[10px] text-gray-300 italic">Mengecek...</span>
+                </td>
+                <td class="px-8 py-6">
+                    <input type="url" id="input-${docId}" placeholder="https://link-dashboard.com" 
+                           class="w-full text-xs px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                </td>
+                <td class="px-8 py-6 text-center">
+                    <button onclick="window.saveLink('${data.email}')" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black py-2.5 px-6 rounded-xl shadow-lg transition-all active:scale-95 uppercase">
+                        SIMPAN
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+
+            // Ambil link existing
+            const lRef = doc(db, 'artifacts', appId, 'public', 'data', 'clientLinks', docId);
+            getDoc(lRef).then(ls => {
+                const sEl = document.getElementById(`status-${docId}`);
+                const iEl = document.getElementById(`input-${docId}`);
+                if (ls.exists()) {
+                    iEl.value = ls.data().url;
+                    sEl.innerHTML = `<span class="text-[9px] bg-green-100 text-green-700 px-3 py-1 rounded-full font-black uppercase tracking-tighter">✓ Aktif</span>`;
+                } else {
+                    sEl.innerHTML = `<span class="text-[9px] bg-red-50 text-red-400 px-3 py-1 rounded-full font-black uppercase tracking-tighter">✕ Kosong</span>`;
+                }
+            });
+        });
+    });
+}
+
+// FUNGSI SIMPAN OLEH ADMIN
+window.saveLink = async (targetEmail) => {
+    const docId = targetEmail.replace(/\./g, "-");
+    const url = document.getElementById(`input-${docId}`).value.trim();
+    const statusMsg = document.getElementById("adminStatus");
+
+    if (!url) {
+        statusMsg.innerText = "Isi link dulu!";
+        statusMsg.className = "text-red-500 bg-red-50 px-4 py-1 rounded-full font-bold";
         return;
     }
 
     try {
-        const docId = targetEmail.replace(/\./g, "-");
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clientLinks', docId);
-        
-        await setDoc(docRef, {
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clientLinks', docId), {
             email: targetEmail,
-            url: targetUrl,
+            url: url,
             updatedAt: new Date().toISOString()
         });
-
-        statusText.innerText = "Link berhasil disimpan untuk " + targetEmail;
-        statusText.className = "text-green-600 text-xs mt-2";
-        
-        document.getElementById("adminTargetEmail").value = "";
-        document.getElementById("adminTargetUrl").value = "";
-    } catch (error) {
-        statusText.innerText = "Error: " + error.message;
-        statusText.className = "text-red-600 text-xs mt-2";
+        statusMsg.innerText = "Berhasil disimpan!";
+        statusMsg.className = "text-green-600 bg-green-50 px-4 py-1 rounded-full font-bold";
+        setTimeout(() => statusMsg.innerText = "", 3000);
+    } catch (e) {
+        statusMsg.innerText = "Gagal simpan.";
     }
-});
+};
 
 // LOGOUT
 document.getElementById("logoutBtn").addEventListener("click", () => {
-    signOut(auth).then(() => {
-        window.location.href = "index.html";
-    });
+    isLoggingOut = true;
+    signOut(auth).then(() => window.location.assign("index.html"));
 });
 </script>
 
