@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin MicroDZ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+<!-- HEADER -->
+<header class="bg-white border-b shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-semibold text-gray-800">MicroDZ Admin Dashboard</h1>
+            <p class="text-xs text-gray-500">Kontrol akses dan manajemen klien</p>
+        </div>
+        <button id="logoutBtn"
+            class="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
+            Logout
+        </button>
+    </div>
+</header>
+
+<!-- MAIN -->
+<main class="flex-grow max-w-5xl mx-auto px-4 py-6">
+
+    <!-- USER INFO -->
+    <div class="bg-white rounded shadow p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">Informasi Akun</h2>
+        <p class="text-gray-700">Email: <span id="userEmail" class="font-medium text-blue-600">-</span></p>
+        <p class="text-gray-700 mt-1">Role: <span id="roleInfo" class="font-semibold">Admin</span></p>
+    </div>
+
+    <!-- CLIENT ACCESS SECTION -->
+    <div id="clientLinkSection" class="bg-blue-600 rounded shadow p-6 mb-6 hidden">
+        <h3 class="text-white font-semibold mb-3">Akses Khusus Anda</h3>
+        <p class="text-blue-100 text-sm mb-4">Admin telah memberikan akses link khusus untuk akun Anda.</p>
+        <a id="clientActionBtn" href="#" target="_blank" 
+           class="inline-block bg-white text-blue-600 font-bold py-3 px-6 rounded-lg shadow hover:bg-gray-100 transition-colors">
+            Buka Link Akses Saya →
+        </a>
+    </div>
+
+    <!-- MENU UMUM -->
+    <div class="bg-white rounded shadow p-6 mb-6 text-gray-700">
+        <h3 class="font-semibold mb-2">Menu Utama</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Monitoring Perangkat</div>
+            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Kontrol Sistem</div>
+            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Data & Laporan</div>
+            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Pengaturan Akun</div>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="adminPanel" class="bg-white border border-yellow-300 rounded shadow p-6">
+        <h3 class="font-semibold text-yellow-800 mb-4 border-b pb-2">Panel Administrasi - Atur Link Klien</h3>
+        
+        <div class="space-y-4 max-w-md">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email Klien</label>
+                <input type="email" id="adminTargetEmail" placeholder="contoh: user@gmail.com" 
+                       class="w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:ring-yellow-400 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">URL / Link Tujuan</label>
+                <input type="url" id="adminTargetUrl" placeholder="https://link-tujuan.com" 
+                       class="w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:ring-yellow-400 outline-none">
+            </div>
+            <button id="saveLinkBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded text-sm">
+                Simpan Link untuk User
+            </button>
+            <p id="adminStatus" class="text-xs font-medium mt-2"></p>
+        </div>
+    </div>
+
+</main>
+
+<footer class="text-center text-xs text-gray-500 py-4">
+    © 2025 MicroDZ
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+    authDomain: "microdz-login.firebaseapp.com",
+    projectId: "microdz-login",
+    appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const appId = "microdz-app-1"; // ID unik untuk identifikasi data aplikasi Anda
+
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    if (user.email !== "admin.microdz@gmail.com") {
+        window.location.href = "user-dashboard.html";
+        return;
+    }
+
+    const email = user.email;
+    document.getElementById("userEmail").innerText = email;
+
+    const docId = email.replace(/\./g, "-");
+    const linkDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'clientLinks', docId);
+
+    onSnapshot(linkDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const section = document.getElementById("clientLinkSection");
+            const btn = document.getElementById("clientActionBtn");
+            
+            section.classList.remove("hidden");
+            btn.href = data.url;
+        }
+    }, (error) => {
+        console.error("Gagal memuat link klien:", error);
+    });
+});
+
+// 3. FUNGSI ADMIN SIMPAN LINK
+document.getElementById("saveLinkBtn").addEventListener("click", async () => {
+    const targetEmail = document.getElementById("adminTargetEmail").value.trim().toLowerCase();
+    const targetUrl = document.getElementById("adminTargetUrl").value.trim();
+    const statusText = document.getElementById("adminStatus");
+
+    if (!targetEmail || !targetUrl) {
+        statusText.innerText = "Harap isi email dan link!";
+        statusText.className = "text-red-600 text-xs mt-2";
+        return;
+    }
+
+    try {
+        const docId = targetEmail.replace(/\./g, "-");
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clientLinks', docId);
+        
+        await setDoc(docRef, {
+            email: targetEmail,
+            url: targetUrl,
+            updatedAt: new Date().toISOString()
+        });
+
+        statusText.innerText = "Link berhasil disimpan untuk " + targetEmail;
+        statusText.className = "text-green-600 text-xs mt-2";
+        
+        document.getElementById("adminTargetEmail").value = "";
+        document.getElementById("adminTargetUrl").value = "";
+    } catch (error) {
+        statusText.innerText = "Error: " + error.message;
+        statusText.className = "text-red-600 text-xs mt-2";
+    }
+});
+
+// LOGOUT
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    signOut(auth).then(() => {
+        window.location.href = "index.html";
+    });
+});
+</script>
+
+</body>
+</html>
