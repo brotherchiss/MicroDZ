@@ -5,126 +5,105 @@
   <title>User Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body class="bg-gray-100 min-h-screen p-6">
 
-  <!-- HEADER -->
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="text-2xl font-bold">User Dashboard</h1>
-      <p id="userInfo" class="text-sm text-gray-600">
-        Memuat data user...
-      </p>
-    </div>
+  <h1 class="text-2xl font-bold mb-6">Dashboard User</h1>
+  <p id="welcomeMsg" class="mb-6 text-lg"></p>
 
-    <button id="logoutBtn"
-      class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-      Logout
-    </button>
-  </div>
+  <button id="monitoringBtn" class="w-full bg-green-600 text-white py-3 rounded mb-4" disabled>
+    Monitoring Perangkat
+  </button>
 
-  <!-- STATUS -->
-  <div id="status"
-    class="mb-6 text-gray-600 bg-white p-4 rounded shadow">
-    Memuat akses dari admin...
-  </div>
+  <button id="reportBtn" class="w-full bg-indigo-600 text-white py-3 rounded" disabled>
+    Laporan
+  </button>
 
-  <!-- ACTION BUTTONS -->
-  <div class="max-w-md space-y-4">
+  <button id="logoutBtn" class="mt-6 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+    Logout
+  </button>
 
-    <button id="monitoringBtn"
-      disabled
-      class="w-full bg-green-600 disabled:bg-gray-400 text-white py-3 rounded text-lg">
-      Monitoring Perangkat
-    </button>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    <button id="reportBtn"
-      disabled
-      class="w-full bg-indigo-600 disabled:bg-gray-400 text-white py-3 rounded text-lg">
-      Laporan
-    </button>
-
-  </div>
-
-<!-- ================= SCRIPT ================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-/* ===== FIREBASE CONFIG ===== */
-const firebaseConfig = {
-  apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-  authDomain: "microdz-login.firebaseapp.com",
-  projectId: "microdz-login",
-  appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-};
-
-/* ===== INIT ===== */
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
-
-const userInfo = document.getElementById("userInfo");
-const status   = document.getElementById("status");
-const monitoringBtn = document.getElementById("monitoringBtn");
-const reportBtn     = document.getElementById("reportBtn");
-const logoutBtn     = document.getElementById("logoutBtn");
-
-/* ===== LOGOUT ===== */
-logoutBtn.addEventListener("click", async () => {
-  await signOut(auth);
-  location.href = "index.html";
-});
-
-/* ===== AUTH CHECK ===== */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    location.href = "index.html";
-    return;
-  }
-
-  /* === tampilkan info user === */
-  userInfo.innerText = `Login sebagai: ${user.email}`;
-
-  /* === ambil data link dari admin === */
-  const linkSnap = await getDoc(doc(db, "userLinks", user.uid));
-
-  if (!linkSnap.exists()) {
-    status.innerText =
-      "Admin belum memberikan akses Monitoring atau Laporan.";
-    return;
-  }
-
-  const data = linkSnap.data();
-
-  /* === MONITORING BUTTON === */
-  if (data.monitoringUrl) {
-    monitoringBtn.disabled = false;
-    monitoringBtn.onclick = () => {
-      window.location.href = data.monitoringUrl;
+    const firebaseConfig = {
+      apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+      authDomain: "microdz-login.firebaseapp.com",
+      projectId: "microdz-login",
+      appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
     };
-  }
 
-  /* === REPORT BUTTON === */
-  if (data.reportUrl) {
-    reportBtn.disabled = false;
-    reportBtn.onclick = () => {
-      window.location.href = data.reportUrl;
-    };
-  }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-  status.innerText = "Akses berhasil dimuat.";
-});
-</script>
+    const monitoringBtn = document.getElementById("monitoringBtn");
+    const reportBtn = document.getElementById("reportBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const welcomeMsg = document.getElementById("welcomeMsg");
+
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      location.href = "index.html";
+    });
+
+    // Fungsi untuk memastikan URL lengkap (http:// atau https:// dan www jika perlu)
+    function ensureAbsoluteUrl(url) {
+      if (!url) return null;
+
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        if (!url.startsWith("www.")) {
+          url = "www." + url;
+        }
+        url = "https://" + url;
+      }
+      return url;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
+
+      welcomeMsg.textContent = `Selamat datang, ${user.email}`;
+
+      try {
+        const snap = await getDoc(doc(db, "userLinks", user.uid));
+
+        if (!snap.exists()) {
+          monitoringBtn.disabled = true;
+          reportBtn.disabled = true;
+          return;
+        }
+
+        const data = snap.data();
+
+        if (data.monitoringUrl) {
+          monitoringBtn.disabled = false;
+          monitoringBtn.onclick = () => {
+            window.open(ensureAbsoluteUrl(data.monitoringUrl), "_blank");
+          };
+        } else {
+          monitoringBtn.disabled = true;
+        }
+
+        if (data.reportUrl) {
+          reportBtn.disabled = false;
+          reportBtn.onclick = () => {
+            window.open(ensureAbsoluteUrl(data.reportUrl), "_blank");
+          };
+        } else {
+          reportBtn.disabled = true;
+        }
+      } catch (error) {
+        console.error("Gagal memuat link:", error);
+        monitoringBtn.disabled = true;
+        reportBtn.disabled = true;
+      }
+    });
+  </script>
 
 </body>
 </html>
