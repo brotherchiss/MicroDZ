@@ -1,200 +1,287 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroDZ | Admin Command</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --bg-base: #05070a;
+            --card-bg: rgba(13, 17, 23, 0.8);
+        }
+
+        body {
+            background-color: var(--bg-base);
+            font-family: 'Space Grotesk', sans-serif;
+            color: #e2e8f0;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            min-h-screen: 100vh;
+        }
+
+        .cyber-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+            backdrop-filter: blur(10px);
+            clip-path: polygon(0 0, 98% 0, 100% 2%, 100% 100%, 2% 100%, 0 98%);
+        }
+
+        .cyber-input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .cyber-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+        }
+
+        .btn-cyber {
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .btn-cyber:hover {
+            background: var(--primary);
+            color: black;
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .btn-logout {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .btn-logout:hover {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 0 15px #ef4444;
+        }
+
+        .table-header {
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.7rem;
+            color: rgba(0, 242, 255, 0.6);
+            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--primary);
+            margin-right: 8px;
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); }
+    </style>
 </head>
+<body class="p-4 md:p-8">
 
-<body class="bg-gray-100 min-h-screen p-6">
+    <!-- HEADER -->
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+        <div>
+            <div class="flex items-center space-x-2 mb-1">
+                <div class="status-dot"></div>
+                <span class="text-[10px] tracking-[0.3em] font-bold text-cyan-400">ADMINISTRATOR LEVEL ACCESS</span>
+            </div>
+            <h1 class="text-3xl font-black tracking-tighter text-white uppercase">
+                User <span class="text-cyan-400">Management</span>
+            </h1>
+        </div>
+        
+        <button id="logoutBtn" class="btn-cyber btn-logout px-6 py-2 rounded-sm">
+            Terminate Session
+        </button>
+    </div>
 
-  <!-- HEADER -->
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">Dashboard Admin – Manajemen User</h1>
-    <button id="logoutBtn"
-      class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-      Logout
-    </button>
-  </div>
+    <!-- MAIN CONTENT -->
+    <div class="max-w-7xl mx-auto">
+        <div id="status" class="mb-6 text-[11px] font-mono text-cyan-500/50 uppercase tracking-[0.2em] animate-pulse">
+            > Initializing secure database connection...
+        </div>
 
-  <!-- STATUS -->
-  <div id="status" class="mb-4 text-gray-600 font-medium">
-    Memeriksa autentikasi...
-  </div>
+        <div class="cyber-card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="table-header">
+                            <th class="p-5">User Identity</th>
+                            <th class="p-5">Monitoring Terminal (URL)</th>
+                            <th class="p-5">Report Database (URL)</th>
+                            <th class="p-5 text-center">Protocol</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTable" class="text-sm font-mono">
+                        <tr>
+                            <td colspan="4" class="p-10 text-center text-gray-500 animate-pulse">
+                                SCANNING FOR ACTIVE IDENTITIES...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-  <!-- TABLE -->
-  <div class="overflow-x-auto">
-    <table class="w-full bg-white shadow rounded">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="p-2 text-left">Email</th>
-          <th class="p-2 text-left">Link Monitoring</th>
-          <th class="p-2 text-left">Link Laporan</th>
-          <th class="p-2 text-left">Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="userTable">
-        <tr>
-          <td colspan="4" class="p-4 text-center text-gray-500">
-            Memuat data...
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <footer class="max-w-7xl mx-auto mt-10 opacity-20 flex justify-between items-center">
+        <p class="text-[8px] font-mono tracking-[0.5em]">ROOT_ACCESS@MICRODZ:~#</p>
+        <p class="text-[8px] font-mono tracking-[0.5em]">SYSTEM_VERSION_2.5.0</p>
+    </footer>
 
-<!-- ================= SCRIPT ================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } 
-  from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-/* ===== FIREBASE CONFIG ===== */
-const firebaseConfig = {
-  apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-  authDomain: "microdz-login.firebaseapp.com",
-  projectId: "microdz-login",
-  appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+            authDomain: "microdz-login.firebaseapp.com",
+            projectId: "microdz-login",
+            appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+        };
 
-/* ===== INIT ===== */
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = "microdz-monitor";
 
-const table  = document.getElementById("userTable");
-const status = document.getElementById("status");
-const logoutBtn = document.getElementById("logoutBtn");
+        const table = document.getElementById("userTable");
+        const statusElement = document.getElementById("status");
 
-/* ===== LOGOUT ===== */
-logoutBtn.addEventListener("click", async () => {
-  await signOut(auth);
-  location.href = "index.html";
-});
+        /* LOGOUT */
+        document.getElementById("logoutBtn").onclick = async () => {
+            await signOut(auth);
+            location.href = "index.html";
+        };
 
-/* ===== AUTH + ROLE CHECK ===== */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    location.href = "index.html";
-    return;
-  }
+        /* AUTH CHECK */
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                location.href = "index.html";
+                return;
+            }
 
-  status.innerText = "Memverifikasi hak akses admin...";
+            statusElement.innerText = "> Verifying administrator credentials...";
+            
+            try {
+                // Gunakan path yang sama dengan login agar konsisten
+                const meRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
+                const meSnap = await getDoc(meRef);
 
-  const meSnap = await getDoc(doc(db, "users", user.uid));
+                if (!meSnap.exists() || meSnap.data().role !== "admin") {
+                    statusElement.innerText = "> Access Denied. Redirecting...";
+                    setTimeout(() => location.href = "index.html", 2000);
+                    return;
+                }
 
-  if (!meSnap.exists() || meSnap.data().role !== "admin") {
-    alert("Akses ditolak. Anda bukan admin.");
-    location.href = "index.html";
-    return;
-  }
+                statusElement.innerText = "> Connection secure. Data decrypted.";
+                loadUsers();
+            } catch (err) {
+                statusElement.innerText = "> Error: " + err.message;
+            }
+        });
 
-  status.remove();
-  loadUsers();
-});
+        /* LOAD USERS */
+        async function loadUsers() {
+            table.innerHTML = "";
+            try {
+                // Note: Query ini mungkin butuh index di Firebase jika koleksi besar
+                // Untuk demo, kita asumsikan struktur path yang benar
+                const usersRef = collection(db, 'artifacts', appId, 'users');
+                const snap = await getDocs(usersRef);
 
-/* ===== LOAD USERS (ROLE = user) ===== */
-async function loadUsers() {
-  table.innerHTML = "";
+                if (snap.empty) {
+                    table.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-500">NO USER IDENTITIES FOUND</td></tr>`;
+                    return;
+                }
 
-  try {
-    const q = query(
-      collection(db, "users"),
-      where("role", "==", "user")
-    );
+                for (const d of snap.docs) {
+                    // Karena struktur kita nested: artifacts/appId/users/UID/profile/data
+                    // Kita perlu fetch data profilenya
+                    const profileRef = doc(db, 'artifacts', appId, 'users', d.id, 'profile', 'data');
+                    const pSnap = await getDoc(profileRef);
+                    
+                    if (!pSnap.exists() || pSnap.data().role === 'admin') continue;
 
-    const snap = await getDocs(q);
+                    const u = pSnap.data();
+                    const uid = d.id;
 
-    if (snap.empty) {
-      table.innerHTML = `
-        <tr>
-          <td colspan="4" class="p-4 text-center text-gray-500">
-            Tidak ada user
-          </td>
-        </tr>`;
-      return;
-    }
+                    // Fetch Links
+                    const linkRef = doc(db, 'artifacts', appId, 'users', uid, 'links', 'config');
+                    const linkSnap = await getDoc(linkRef);
+                    const links = linkSnap.exists() ? linkSnap.data() : {};
 
-    for (const d of snap.docs) {
-      const u = d.data();
-      const uid = d.id;
+                    const row = document.createElement('tr');
+                    row.className = "border-b border-cyan-500/5 hover:bg-cyan-500/5 transition-colors";
+                    row.innerHTML = `
+                        <td class="p-5 text-cyan-100">${u.email}</td>
+                        <td class="p-5">
+                            <input id="mon-${uid}" value="${links.monitoringUrl || ''}" 
+                                placeholder="https://..." class="cyber-input w-full px-3 py-2 text-xs">
+                        </td>
+                        <td class="p-5">
+                            <input id="rep-${uid}" value="${links.reportUrl || ''}" 
+                                placeholder="https://..." class="cyber-input w-full px-3 py-2 text-xs">
+                        </td>
+                        <td class="p-5 text-center">
+                            <button onclick="window.saveLink('${uid}')" class="btn-cyber px-4 py-2 rounded-sm">
+                                Update
+                            </button>
+                        </td>
+                    `;
+                    table.appendChild(row);
+                }
+            } catch (err) {
+                console.error(err);
+                table.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-red-500">DATABASE_FETCH_ERROR</td></tr>`;
+            }
+        }
 
-      const linkSnap = await getDoc(doc(db, "userLinks", uid));
-      const links = linkSnap.exists() ? linkSnap.data() : {};
-
-      table.innerHTML += `
-        <tr class="border-t hover:bg-gray-50">
-          <td class="p-2 text-sm">${u.email || "-"}</td>
-
-          <td class="p-2">
-            <input
-              id="mon-${uid}"
-              value="${links.monitoringUrl || ""}"
-              placeholder="https://monitoring..."
-              class="border p-1 w-full text-sm rounded"
-            />
-          </td>
-
-          <td class="p-2">
-            <input
-              id="rep-${uid}"
-              value="${links.reportUrl || ""}"
-              placeholder="https://laporan..."
-              class="border p-1 w-full text-sm rounded"
-            />
-          </td>
-
-          <td class="p-2">
-            <button
-              onclick="saveLink('${uid}')"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
-              Simpan
-            </button>
-          </td>
-        </tr>
-      `;
-    }
-
-  } catch (err) {
-    console.error(err);
-    table.innerHTML = `
-      <tr>
-        <td colspan="4" class="p-4 text-center text-red-600">
-          Gagal memuat data user
-        </td>
-      </tr>`;
-  }
-}
-
-/* ===== SAVE LINK PER USER ===== */
-window.saveLink = async (uid) => {
-  const monitoringUrl = document.getElementById(`mon-${uid}`).value.trim();
-  const reportUrl     = document.getElementById(`rep-${uid}`).value.trim();
-
-  await setDoc(
-    doc(db, "userLinks", uid),
-    {
-      monitoringUrl,
-      reportUrl,
-      updatedAt: serverTimestamp()
-    },
-    { merge: true }
-  );
-
-  alert("Link berhasil disimpan");
-};
-</script>
-
+        /* SAVE ACTION */
+        window.saveLink = async (uid) => {
+            const mon = document.getElementById(`mon-${uid}`).value.trim();
+            const rep = document.getElementById(`rep-${uid}`).value.trim();
+            
+            try {
+                const linkRef = doc(db, 'artifacts', appId, 'users', uid, 'links', 'config');
+                await setDoc(linkRef, {
+                    monitoringUrl: mon,
+                    reportUrl: rep,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+                
+                alert("PROTOCOL UPDATED: Data synced with device hub.");
+            } catch (err) {
+                alert("SYNC_ERROR: " + err.message);
+            }
+        };
+    </script>
 </body>
 </html>
