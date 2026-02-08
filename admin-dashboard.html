@@ -49,16 +49,15 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 import { 
-  getDatabase, 
-  ref, 
-  get 
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  getFirestore, 
+  collection, 
+  getDocs 
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 /* ================= CONFIG ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
   authDomain: "microdz-login.firebaseapp.com",
-  databaseURL: "https://microdz-login-default-rtdb.firebaseio.com",
   projectId: "microdz-login",
   appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
 };
@@ -66,7 +65,7 @@ const firebaseConfig = {
 /* ================= INIT ================= */
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db   = getDatabase(app);
+const db   = getFirestore(app);
 
 const table = document.getElementById("userTable");
 const logoutBtn = document.getElementById("logoutBtn");
@@ -87,14 +86,14 @@ onAuthStateChanged(auth, async (user) => {
   loadUsers();
 });
 
-/* ================= LOAD USERS ================= */
+/* ================= LOAD USERS (FIRESTORE) ================= */
 async function loadUsers() {
   table.innerHTML = "";
 
   try {
-    const snapshot = await get(ref(db, "users"));
+    const snap = await getDocs(collection(db, "users"));
 
-    if (!snapshot.exists()) {
+    if (snap.empty) {
       table.innerHTML = `
         <tr>
           <td colspan="4" class="p-4 text-center text-gray-500">
@@ -104,18 +103,18 @@ async function loadUsers() {
       return;
     }
 
-    const users = snapshot.val();
-
-    Object.keys(users).forEach(uid => {
-      const u = users[uid];
+    snap.forEach(doc => {
+      const u = doc.data();
 
       table.innerHTML += `
         <tr class="border-t hover:bg-gray-50">
-          <td class="p-2 text-sm">${uid}</td>
+          <td class="p-2 text-sm">${doc.id}</td>
           <td class="p-2">${u.email || "-"}</td>
           <td class="p-2">${u.role || "-"}</td>
           <td class="p-2">
-            ${u.createdAt ? new Date(u.createdAt).toLocaleString() : "-"}
+            ${u.createdAt?.toDate
+              ? u.createdAt.toDate().toLocaleString()
+              : "-"}
           </td>
         </tr>
       `;
@@ -126,7 +125,7 @@ async function loadUsers() {
     table.innerHTML = `
       <tr>
         <td colspan="4" class="p-4 text-center text-red-600">
-          Gagal mengambil data user
+          Gagal mengambil data user (cek rules Firestore)
         </td>
       </tr>`;
   }
