@@ -1,16 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk ke MicroDZ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f6f8fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        }
+        .microdz-card {
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+        }
+        .btn-primary {
+            background-color: #2da44e;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #2c974b;
+        }
+        .input-field {
+            border: 1px solid #d0d7de;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-field:focus {
+            border-color: #0969da;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+        }
+    </style>
 </head>
-<body>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-<h2>Login</h2>
+    <!-- Judul Aplikasi -->
+    <h1 class="text-3xl font-bold mb-8 text-gray-800 tracking-tight">MicroDZ</h1>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
+    <!-- Sub-judul -->
+    <h2 id="viewTitle" class="text-2xl font-light mb-4 text-gray-700">Masuk ke MicroDZ</h2>
 
-<script type="module" src="js/auth.js"></script>
+    <!-- Alert Box (Hidden by default) -->
+    <div id="alertBox" class="hidden w-full max-w-[308px] p-3 mb-4 text-sm border rounded bg-red-50 border-red-200 text-red-800">
+        Username atau password salah.
+    </div>
+
+    <!-- Form Container -->
+    <div id="loginView" class="w-full max-w-[308px]">
+        <div class="microdz-card p-4 shadow-sm">
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2" for="username">Username atau alamat email</label>
+                    <input class="input-field w-full px-3 py-1.5 rounded-md text-sm" type="text" id="username" autocomplete="username" required>
+                </div>
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-semibold" for="password">Password</label>
+                        <a href="#" onclick="showView('forgotView')" class="text-xs text-blue-600 hover:underline">Lupa password?</a>
+                    </div>
+                    <input class="input-field w-full px-3 py-1.5 rounded-md text-sm" type="password" id="password" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn-primary w-full py-1.5 px-4 rounded-md font-semibold text-sm">Masuk</button>
+            </form>
+        </div>
+
+        <!-- Box Daftar Baru -->
+        <div class="mt-4 p-4 border border-gray-300 rounded-md text-center text-sm">
+            Baru di MicroDZ? <a href="#" onclick="showView('registerView')" class="text-blue-600 hover:underline font-medium">Buat akun</a>.
+        </div>
+    </div>
+
+    <!-- Register View -->
+    <div id="registerView" class="hidden w-full max-w-[308px]">
+        <div class="microdz-card p-4 shadow-sm">
+            <p class="text-sm text-gray-600 mb-4 font-medium">Lengkapi detail untuk mendaftar</p>
+            <form onsubmit="handleRegister(event)">
+                <div class="mb-3">
+                    <label class="block text-sm font-semibold mb-1" for="reg-email">Email</label>
+                    <input class="input-field w-full px-3 py-1.5 rounded-md text-sm" type="email" id="reg-email" placeholder="nama@contoh.com" required>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-semibold mb-1" for="reg-username">Username</label>
+                    <input class="input-field w-full px-3 py-1.5 rounded-md text-sm" type="text" id="reg-username" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1" for="reg-password">Password</label>
+                    <input class="input-field w-full px-3 py-1.5 rounded-md text-sm" type="password" id="reg-password" required>
+                </div>
+                <button type="submit" class="btn-primary w-full py-1.5 px-4 rounded-md font-semibold text-sm">Daftar Akun</button>
+            </form>
+        </div>
+        <div class="mt-4 text-center text-sm">
+            Sudah punya akun? <a href="#" onclick="showView('loginView')" class="text-blue-600 hover:underline">Masuk di sini</a>.
+        </div>
+    </div>
+
+    <!-- Forgot Password View -->
+    <div id="forgotView" class="hidden w-full max-w-[308px]">
+        <div class="microdz-card p-4 text-center shadow-sm">
+            <p class="text-xs text-gray-600 mb-4 text-left">Masukkan alamat email Anda dan kami akan mengirimkan tautan untuk mengatur ulang kata sandi.</p>
+            <form onsubmit="handleForgot(event)">
+                <input class="input-field w-full px-3 py-1.5 rounded-md text-sm mb-4" type="email" placeholder="Masukkan alamat email" required>
+                <button type="submit" class="btn-primary w-full py-1.5 px-4 rounded-md font-semibold text-sm">Kirim email reset</button>
+            </form>
+        </div>
+        <div class="mt-4 text-center text-sm">
+            <a href="#" onclick="showView('loginView')" class="text-blue-600 hover:underline">Kembali ke login</a>
+        </div>
+    </div>
+
+    <!-- Footer Links -->
+    <div class="mt-auto py-8 flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+        <a href="#" class="hover:text-blue-600">Ketentuan</a>
+        <a href="#" class="hover:text-blue-600">Privasi</a>
+        <a href="#" class="hover:text-blue-600">Bantuan</a>
+        <span class="text-gray-300">© 2025 MicroDZ</span>
+    </div>
+
+    <script>
+        function showView(viewId) {
+            // Sembunyikan semua view
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('registerView').classList.add('hidden');
+            document.getElementById('forgotView').classList.add('hidden');
+            document.getElementById('alertBox').classList.add('hidden');
+
+            // Tampilkan yang dipilih
+            document.getElementById(viewId).classList.remove('hidden');
+
+            // Ubah sub-judul sesuai konteks
+            const viewTitle = document.getElementById('viewTitle');
+            if (viewId === 'loginView') viewTitle.innerText = 'Masuk ke MicroDZ';
+            else if (viewId === 'registerView') viewTitle.innerText = 'Bergabung dengan MicroDZ';
+            else viewTitle.innerText = 'Atur ulang kata sandi';
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const alert = document.getElementById('alertBox');
+            alert.classList.remove('hidden');
+            alert.innerText = "Mencoba masuk ke akun MicroDZ...";
+            setTimeout(() => {
+                alert.innerText = "Gagal masuk. Akun tidak ditemukan.";
+            }, 1000);
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            alert("Pendaftaran MicroDZ berhasil! Silakan masuk.");
+            showView('loginView');
+        }
+
+        function handleForgot(e) {
+            e.preventDefault();
+            alert("Instruksi reset password telah dikirim ke email Anda.");
+            showView('loginView');
+        }
+    </script>
 </body>
 </html>
