@@ -33,46 +33,69 @@
         <p class="text-gray-700 mt-1">Role: <span id="roleInfo" class="font-semibold">Admin</span></p>
     </div>
 
-    <!-- CLIENT ACCESS SECTION -->
-    <div id="clientLinkSection" class="bg-blue-600 rounded shadow p-6 mb-6 hidden">
-        <h3 class="text-white font-semibold mb-3">Akses Khusus Anda</h3>
-        <p class="text-blue-100 text-sm mb-4">Admin telah memberikan akses link khusus untuk akun Anda.</p>
-        <a id="clientActionBtn" href="#" target="_blank" 
-           class="inline-block bg-white text-blue-600 font-bold py-3 px-6 rounded-lg shadow hover:bg-gray-100 transition-colors">
-            Buka Link Akses Saya →
-        </a>
-    </div>
-
-    <!-- MENU UMUM -->
-    <div class="bg-white rounded shadow p-6 mb-6 text-gray-700">
-        <h3 class="font-semibold mb-2">Menu Utama</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Monitoring Perangkat</div>
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Kontrol Sistem</div>
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Data & Laporan</div>
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Pengaturan Akun</div>
-        </div>
-    </div>
-
     <!-- ADMIN PANEL -->
     <div id="adminPanel" class="bg-white border border-yellow-300 rounded shadow p-6">
-        <h3 class="font-semibold text-yellow-800 mb-4 border-b pb-2">Panel Administrasi - Atur Link Klien</h3>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <div>
+                <h3 class="font-semibold text-yellow-800">Panel Administrasi - Atur Link Klien</h3>
+                <p class="text-xs text-yellow-700">Kelola link monitoring, laporan, dan pengaturan akun per user.</p>
+            </div>
+            <span class="inline-flex items-center text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
+                URL Pengaturan Akun: <span class="ml-1 font-semibold" id="settingsUrlLabel">pengaturan-akun.html</span>
+            </span>
+        </div>
         
-        <div class="space-y-4 max-w-md">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email Klien</label>
-                <input type="email" id="adminTargetEmail" placeholder="contoh: user@gmail.com" 
-                       class="w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:ring-yellow-400 outline-none">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1">
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">Tambah / Perbarui Link User</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email Klien</label>
+                        <input type="email" id="adminTargetEmail" placeholder="contoh: user@gmail.com" 
+                               class="w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:ring-yellow-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Link Monitoring Perangkat</label>
+                        <input type="url" id="adminMonitoringUrl" placeholder="https://monitoring-link.com" 
+                               class="w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:ring-yellow-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Link Data & Laporan</label>
+                        <input type="url" id="adminReportUrl" placeholder="https://laporan-link.com" 
+                               class="w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:ring-yellow-400 outline-none">
+                    </div>
+                    <div class="bg-gray-50 border rounded px-3 py-2">
+                        <p class="text-xs text-gray-500">Link Pengaturan Akun</p>
+                        <p class="text-sm font-semibold text-gray-700">pengaturan-akun.html</p>
+                    </div>
+                    <button id="saveLinkBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        Simpan Link untuk User
+                    </button>
+                    <p id="adminStatus" class="text-xs font-medium mt-2"></p>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">URL / Link Tujuan</label>
-                <input type="url" id="adminTargetUrl" placeholder="https://link-tujuan.com" 
-                       class="w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:ring-yellow-400 outline-none">
+
+            <div class="lg:col-span-2">
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">Daftar User Terdaftar</h4>
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="min-w-full text-sm text-left">
+                        <thead class="bg-gray-50 text-gray-600">
+                            <tr>
+                                <th class="px-4 py-3 font-semibold">Email</th>
+                                <th class="px-4 py-3 font-semibold">Monitoring Perangkat</th>
+                                <th class="px-4 py-3 font-semibold">Data & Laporan</th>
+                                <th class="px-4 py-3 font-semibold">Pengaturan Akun</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userLinkTable" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="4" class="px-4 py-6 text-center text-gray-500">Belum ada data user.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Klik link untuk membuka halaman yang telah Anda atur.</p>
             </div>
-            <button id="saveLinkBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded text-sm">
-                Simpan Link untuk User
-            </button>
-            <p id="adminStatus" class="text-xs font-medium mt-2"></p>
         </div>
     </div>
 
@@ -85,7 +108,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
@@ -99,6 +122,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const appId = "microdz-app-1"; // ID unik untuk identifikasi data aplikasi Anda
+const settingsUrl = "pengaturan-akun.html";
 
 onAuthStateChanged(auth, (user) => {
     if (!user) {
@@ -114,18 +138,44 @@ onAuthStateChanged(auth, (user) => {
     const email = user.email;
     document.getElementById("userEmail").innerText = email;
 
-    const docId = email.replace(/\./g, "-");
-    const linkDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'clientLinks', docId);
+    document.getElementById("settingsUrlLabel").innerText = settingsUrl;
 
-    onSnapshot(linkDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const section = document.getElementById("clientLinkSection");
-            const btn = document.getElementById("clientActionBtn");
-            
-            section.classList.remove("hidden");
-            btn.href = data.url;
+    const linksCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'clientLinks');
+    const linksQuery = query(linksCollectionRef, orderBy("email"));
+    const tableBody = document.getElementById("userLinkTable");
+
+    onSnapshot(linksQuery, (snapshot) => {
+        tableBody.innerHTML = "";
+        if (snapshot.empty) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="px-4 py-6 text-center text-gray-500">Belum ada data user.</td>
+                </tr>
+            `;
+            return;
         }
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td class="px-4 py-3 font-medium text-gray-700">${data.email ?? "-"}</td>
+                <td class="px-4 py-3">
+                    ${data.monitoringUrl
+                        ? `<a href="${data.monitoringUrl}" target="_blank" class="text-blue-600 hover:underline">Buka Monitoring</a>`
+                        : `<span class="text-gray-400">Belum diatur</span>`}
+                </td>
+                <td class="px-4 py-3">
+                    ${data.reportUrl
+                        ? `<a href="${data.reportUrl}" target="_blank" class="text-blue-600 hover:underline">Buka Laporan</a>`
+                        : `<span class="text-gray-400">Belum diatur</span>`}
+                </td>
+                <td class="px-4 py-3">
+                    <a href="${data.settingsUrl ?? settingsUrl}" target="_blank" class="text-blue-600 hover:underline">Pengaturan Akun</a>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
     }, (error) => {
         console.error("Gagal memuat link klien:", error);
     });
@@ -134,11 +184,12 @@ onAuthStateChanged(auth, (user) => {
 // 3. FUNGSI ADMIN SIMPAN LINK
 document.getElementById("saveLinkBtn").addEventListener("click", async () => {
     const targetEmail = document.getElementById("adminTargetEmail").value.trim().toLowerCase();
-    const targetUrl = document.getElementById("adminTargetUrl").value.trim();
+    const monitoringUrl = document.getElementById("adminMonitoringUrl").value.trim();
+    const reportUrl = document.getElementById("adminReportUrl").value.trim();
     const statusText = document.getElementById("adminStatus");
 
-    if (!targetEmail || !targetUrl) {
-        statusText.innerText = "Harap isi email dan link!";
+    if (!targetEmail || !monitoringUrl || !reportUrl) {
+        statusText.innerText = "Harap isi email, link monitoring, dan link laporan!";
         statusText.className = "text-red-600 text-xs mt-2";
         return;
     }
@@ -149,15 +200,18 @@ document.getElementById("saveLinkBtn").addEventListener("click", async () => {
         
         await setDoc(docRef, {
             email: targetEmail,
-            url: targetUrl,
+            monitoringUrl,
+            reportUrl,
+            settingsUrl,
             updatedAt: new Date().toISOString()
-        });
+        }, { merge: true });
 
         statusText.innerText = "Link berhasil disimpan untuk " + targetEmail;
         statusText.className = "text-green-600 text-xs mt-2";
         
         document.getElementById("adminTargetEmail").value = "";
-        document.getElementById("adminTargetUrl").value = "";
+        document.getElementById("adminMonitoringUrl").value = "";
+        document.getElementById("adminReportUrl").value = "";
     } catch (error) {
         statusText.innerText = "Error: " + error.message;
         statusText.className = "text-red-600 text-xs mt-2";
