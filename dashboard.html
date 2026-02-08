@@ -9,80 +9,110 @@
 
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
-    <!-- HEADER -->
-    <header class="bg-white border-b shadow-sm">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-semibold text-gray-800">MicroDZ Dashboard</h1>
-            <button id="logoutBtn"
-                class="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
-                Logout
-            </button>
-        </div>
-    </header>
+<!-- HEADER -->
+<header class="bg-white border-b shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+        <h1 class="text-xl font-semibold text-gray-800">MicroDZ Dashboard</h1>
+        <button id="logoutBtn"
+            class="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
+            Logout
+        </button>
+    </div>
+</header>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-grow max-w-5xl mx-auto px-4 py-6">
-        <div class="bg-white rounded shadow p-6">
-            <h2 class="text-lg font-semibold mb-2">Selamat datang</h2>
-            <p class="text-gray-700 mb-4">
-                Anda login sebagai:
-                <span id="userEmail" class="font-medium text-blue-600">-</span>
-            </p>
+<!-- MAIN -->
+<main class="flex-grow max-w-5xl mx-auto px-4 py-6">
 
-            <hr class="my-4">
+    <!-- USER INFO -->
+    <div class="bg-white rounded shadow p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">Informasi Akun</h2>
 
-            <h3 class="font-semibold mb-2">Menu</h3>
-            <ul class="list-disc list-inside text-gray-700">
-                <li>Monitoring perangkat</li>
-                <li>Kontrol sistem</li>
-                <li>Data & laporan</li>
-                <li>Pengaturan akun</li>
-            </ul>
-        </div>
-    </main>
+        <p class="text-gray-700">
+            Email:
+            <span id="userEmail" class="font-medium text-blue-600">-</span>
+        </p>
 
-    <!-- FOOTER -->
-    <footer class="text-center text-xs text-gray-500 py-4">
-        © 2025 MicroDZ
-    </footer>
+        <p class="text-gray-700 mt-1">
+            Role:
+            <span id="roleInfo" class="font-semibold">-</span>
+        </p>
+    </div>
 
-    <!-- FIREBASE SCRIPT -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { 
-            getAuth, 
-            onAuthStateChanged, 
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    <!-- MENU UMUM -->
+    <div class="bg-white rounded shadow p-6 mb-6">
+        <h3 class="font-semibold mb-2">Menu Umum</h3>
+        <ul class="list-disc list-inside text-gray-700">
+            <li>Monitoring perangkat</li>
+            <li>Kontrol sistem</li>
+            <li>Data & laporan</li>
+            <li>Pengaturan akun</li>
+        </ul>
+    </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-            authDomain: "microdz-login.firebaseapp.com",
-            projectId: "microdz-login",
-            appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-        };
+    <!-- ADMIN PANEL -->
+    <div id="adminPanel" class="bg-yellow-50 border border-yellow-300 rounded p-6 hidden">
+        <h3 class="font-semibold text-yellow-800 mb-2">Panel Admin</h3>
+        <ul class="list-disc list-inside text-yellow-700">
+            <li>Manajemen user</li>
+            <li>Konfigurasi sistem</li>
+            <li>Audit & log aktivitas</li>
+        </ul>
+    </div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+</main>
 
-        // CEK LOGIN
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                // BELUM LOGIN → KEMBALI KE LOGIN
-                window.location.href = "index.html";
-            } else {
-                // SUDAH LOGIN → TAMPILKAN EMAIL
-                document.getElementById("userEmail").innerText = user.email;
-            }
-        });
+<!-- FOOTER -->
+<footer class="text-center text-xs text-gray-500 py-4">
+    © 2025 MicroDZ
+</footer>
 
-        // LOGOUT
-        document.getElementById("logoutBtn").addEventListener("click", () => {
-            signOut(auth).then(() => {
-                window.location.href = "index.html";
-            });
-        });
-    </script>
+<!-- FIREBASE LOGIC -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+    getAuth,
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+    authDomain: "microdz-login.firebaseapp.com",
+    projectId: "microdz-login",
+    appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// 🔐 CEK LOGIN & ROLE
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    const email = user.email;
+    document.getElementById("userEmail").innerText = email;
+
+    let role = "User";
+
+    // 🔑 TENTUKAN ADMIN DI SINI
+    if (email === "admin.microdz@gmail.com") {
+        role = "Admin";
+        document.getElementById("adminPanel").classList.remove("hidden");
+    }
+
+    document.getElementById("roleInfo").innerText = role;
+});
+
+// 🚪 LOGOUT
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    signOut(auth).then(() => {
+        window.location.href = "index.html";
+    });
+});
+</script>
 
 </body>
 </html>
