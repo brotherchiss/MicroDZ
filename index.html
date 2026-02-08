@@ -40,7 +40,6 @@ index 8b63a7ca6a17cf9f496310d9f565c34226a3f230..dffc02564fe7fbea21af3320efed604c
          const app = initializeApp(firebaseConfig);
          const auth = getAuth(app);
 +        const db = getFirestore(app);
-         
 +        const appId = "microdz-app-1";
          
          const status = document.getElementById("status");
@@ -102,6 +101,7 @@ index 8b63a7ca6a17cf9f496310d9f565c34226a3f230..dffc02564fe7fbea21af3320efed604c
  
              signInWithEmailAndPassword(auth, email, password)
                  .then(() => {
+-                    window.location.href = "dashboard.html";
 +                    redirectToDashboard(email);
                  })
                  .catch(err => {
@@ -116,6 +116,7 @@ index 8b63a7ca6a17cf9f496310d9f565c34226a3f230..dffc02564fe7fbea21af3320efed604c
              const password = document.getElementById("regPassword").value;
  
              createUserWithEmailAndPassword(auth, email, password)
+-                .then(() => {
 +                .then(async () => {
 +                    const userDocId = email.toLowerCase().replace(/\./g, "-");
 +                    const userDocRef = doc(db, "artifacts", appId, "public", "data", "users", userDocId);
