@@ -1,151 +1,248 @@
-diff --git a/index.html b/index.html
-index 8b63a7ca6a17cf9f496310d9f565c34226a3f230..dffc02564fe7fbea21af3320efed604ce13b8e65 100644
---- a/index.html
-+++ b/index.html
-@@ -109,126 +109,144 @@
-                 <p class="text-xs text-gray-500 mb-4">Masukkan email Anda dan kami akan mengirimkan tautan untuk mengatur ulang password.</p>
-                 <form id="forgotForm">
-                     <div class="mb-4">
-                         <input id="forgotEmail" type="email" placeholder="Masukkan email Anda" class="input-field w-full px-3 py-2 rounded text-sm" required>
-                     </div>
-                     <button type="submit" class="btn-blue w-full py-2 rounded font-semibold text-sm">Kirim Tautan Reset</button>
-                 </form>
-             </div>
- 
-             <div class="text-center text-sm">
-                 <a href="#" id="showLoginFromForgot" class="text-blue-600 hover:underline">Kembali ke Login</a>
-             </div>
-         </div>
-     </div>
- 
-     <p class="mt-8 text-xs text-gray-500">© 2025 MicroDZ Auth System</p>
- 
-     <script type="module">
-         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-         import {
-             getAuth,
-             signInWithEmailAndPassword,
-             createUserWithEmailAndPassword,
-             sendPasswordResetEmail
-         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
- 
-         const firebaseConfig = {
-             apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-             authDomain: "microdz-login.firebaseapp.com",
-             projectId: "microdz-login",
-             appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-         };
- 
-         const app = initializeApp(firebaseConfig);
-         const auth = getAuth(app);
-+        const db = getFirestore(app);
-+        const appId = "microdz-app-1";
-         
-         const status = document.getElementById("status");
-         const loginSection = document.getElementById("loginSection");
-         const registerSection = document.getElementById("registerSection");
-         const forgotSection = document.getElementById("forgotSection");
- 
-         // UI Toggles
-         function hideAllSections() {
-             loginSection.classList.add("hidden");
-             registerSection.classList.add("hidden");
-             forgotSection.classList.add("hidden");
-             status.classList.add("hidden");
-         }
- 
-         document.getElementById("showRegister").addEventListener("click", (e) => {
-             e.preventDefault();
-             hideAllSections();
-             registerSection.classList.remove("hidden");
-         });
- 
-         document.getElementById("showForgot").addEventListener("click", (e) => {
-             e.preventDefault();
-             hideAllSections();
-             forgotSection.classList.remove("hidden");
-         });
- 
-         const backToLoginLinks = ["showLoginFromReg", "showLoginFromForgot"];
-         backToLoginLinks.forEach(id => {
-             document.getElementById(id).addEventListener("click", (e) => {
-                 e.preventDefault();
-                 hideAllSections();
-                 loginSection.classList.remove("hidden");
-             });
-         });
- 
-         function showStatus(message, isError = true) {
-             status.innerText = message;
-             status.className = isError 
-                 ? "w-full p-3 mb-4 text-sm border rounded bg-red-50 border-red-200 text-red-800 block"
-                 : "w-full p-3 mb-4 text-sm border rounded bg-green-50 border-green-200 text-green-800 block";
-             window.scrollTo(0,0);
-         }
- 
-+        function redirectToDashboard(email) {
-+            if (email === "admin.microdz@gmail.com") {
-+                window.location.href = "admin-dashboard.html";
-+                return;
-+            }
-+
-+            window.location.href = "user-dashboard.html";
-+        }
-+
-         // PROSES LOGIN
-         document.getElementById("loginForm").addEventListener("submit", e => {
-             e.preventDefault();
-             const email = document.getElementById("loginEmail").value;
-             const password = document.getElementById("loginPassword").value;
- 
-             signInWithEmailAndPassword(auth, email, password)
-                 .then(() => {
--                    window.location.href = "dashboard.html";
-+                    redirectToDashboard(email);
-                 })
-                 .catch(err => {
-                     showStatus("Gagal masuk: " + err.message);
-                 });
-         });
- 
-         // PROSES REGISTER
-         document.getElementById("registerForm").addEventListener("submit", e => {
-             e.preventDefault();
-             const email = document.getElementById("regEmail").value;
-             const password = document.getElementById("regPassword").value;
- 
-             createUserWithEmailAndPassword(auth, email, password)
--                .then(() => {
-+                .then(async () => {
-+                    const userDocId = email.toLowerCase().replace(/\./g, "-");
-+                    const userDocRef = doc(db, "artifacts", appId, "public", "data", "users", userDocId);
-+                    await setDoc(userDocRef, {
-+                        email: email.toLowerCase(),
-+                        createdAt: new Date().toISOString()
-+                    }, { merge: true });
-                     showStatus("Akun berhasil dibuat. Silakan login.", false);
-                     document.getElementById("regEmail").value = "";
-                     document.getElementById("regPassword").value = "";
-                     setTimeout(() => {
-                         hideAllSections();
-                         loginSection.classList.remove("hidden");
-                     }, 2000);
-                 })
-                 .catch(err => {
-                     showStatus("Gagal daftar: " + err.message);
-                 });
-         });
- 
-         // PROSES FORGOT PASSWORD
-         document.getElementById("forgotForm").addEventListener("submit", e => {
-             e.preventDefault();
-             const email = document.getElementById("forgotEmail").value;
- 
-             sendPasswordResetEmail(auth, email)
-                 .then(() => {
-                     showStatus("Email reset password telah dikirim. Silakan cek inbox/spam Anda.", false);
-                     document.getElementById("forgotEmail").value = "";
-                 })
-                 .catch(err => {
-                     showStatus("Gagal: " + err.message);
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroDZ Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f6f8fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+        .microdz-card {
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+        }
+        .btn-green {
+            background-color: #2da44e;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-green:hover {
+            background-color: #2c974b;
+        }
+        .btn-blue {
+            background-color: #0969da;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-blue:hover {
+            background-color: #0860ca;
+        }
+        .input-field {
+            border: 1px solid #d0d7de;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-field:focus {
+            border-color: #0969da;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Judul Aplikasi -->
+    <h1 class="text-3xl font-bold mb-8 text-gray-800 tracking-tight cursor-pointer" onclick="location.reload()">MicroDZ</h1>
+
+    <div class="w-full max-w-[340px]">
+        <!-- Pesan Status -->
+        <div id="status" class="hidden w-full p-3 mb-4 text-sm border rounded bg-red-50 border-red-200 text-red-800"></div>
+
+        <!-- Bagian LOGIN -->
+        <div id="loginSection">
+            <div class="microdz-card p-6 shadow-sm mb-4">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700">Masuk</h2>
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium mb-1" for="loginEmail">Email</label>
+                        <input id="loginEmail" type="email" placeholder="Email" class="input-field w-full px-3 py-2 rounded text-sm" required>
+                    </div>
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm font-medium" for="loginPassword">Password</label>
+                            <a href="#" id="showForgot" class="text-xs text-blue-600 hover:underline">Lupa password?</a>
+                        </div>
+                        <input id="loginPassword" type="password" placeholder="Password" class="input-field w-full px-3 py-2 rounded text-sm" required>
+                    </div>
+                    <button type="submit" class="btn-green w-full py-2 rounded font-semibold text-sm">Login</button>
+                </form>
+            </div>
+            
+            <!-- Link ke Register -->
+            <div class="microdz-card p-4 text-center text-sm border-gray-300 shadow-sm">
+                Baru di MicroDZ? <a href="#" id="showRegister" class="text-blue-600 hover:underline">Buat akun baru</a>.
+            </div>
+        </div>
+
+        <!-- Bagian REGISTER (Hidden by default) -->
+        <div id="registerSection" class="hidden">
+            <div class="microdz-card p-6 shadow-sm mb-4">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700">Daftar Akun Baru</h2>
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium mb-1" for="regEmail">Email Baru</label>
+                        <input id="regEmail" type="email" placeholder="Email baru" class="input-field w-full px-3 py-2 rounded text-sm" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-1" for="regPassword">Password Baru</label>
+                        <input id="regPassword" type="password" placeholder="Password baru" class="input-field w-full px-3 py-2 rounded text-sm" required>
+                    </div>
+                    <button type="submit" class="btn-blue w-full py-2 rounded font-semibold text-sm">Daftar</button>
+                </form>
+            </div>
+
+            <div class="text-center text-sm">
+                Sudah punya akun? <a href="#" id="showLoginFromReg" class="text-blue-600 hover:underline">Kembali ke Login</a>.
+            </div>
+        </div>
+
+        <!-- Bagian FORGOT PASSWORD (Hidden by default) -->
+        <div id="forgotSection" class="hidden">
+            <div class="microdz-card p-6 shadow-sm mb-4 text-center">
+                <h2 class="text-lg font-semibold mb-2 text-gray-700">Reset Password</h2>
+                <p class="text-xs text-gray-500 mb-4">Masukkan email Anda dan kami akan mengirimkan tautan untuk mengatur ulang password.</p>
+                <form id="forgotForm">
+                    <div class="mb-4">
+                        <input id="forgotEmail" type="email" placeholder="Masukkan email Anda" class="input-field w-full px-3 py-2 rounded text-sm" required>
+                    </div>
+                    <button type="submit" class="btn-blue w-full py-2 rounded font-semibold text-sm">Kirim Tautan Reset</button>
+                </form>
+            </div>
+
+            <div class="text-center text-sm">
+                <a href="#" id="showLoginFromForgot" class="text-blue-600 hover:underline">Kembali ke Login</a>
+            </div>
+        </div>
+    </div>
+
+    <p class="mt-8 text-xs text-gray-500">© 2025 MicroDZ Auth System</p>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import {
+            getAuth,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            sendPasswordResetEmail
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+            authDomain: "microdz-login.firebaseapp.com",
+            projectId: "microdz-login",
+            appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        const status = document.getElementById("status");
+        const loginSection = document.getElementById("loginSection");
+        const registerSection = document.getElementById("registerSection");
+        const forgotSection = document.getElementById("forgotSection");
+
+        // UI Toggles
+        function hideAllSections() {
+            loginSection.classList.add("hidden");
+            registerSection.classList.add("hidden");
+            forgotSection.classList.add("hidden");
+            status.classList.add("hidden");
+        }
+
+        document.getElementById("showRegister").addEventListener("click", (e) => {
+            e.preventDefault();
+            hideAllSections();
+            registerSection.classList.remove("hidden");
+        });
+
+        document.getElementById("showForgot").addEventListener("click", (e) => {
+            e.preventDefault();
+            hideAllSections();
+            forgotSection.classList.remove("hidden");
+        });
+
+        const backToLoginLinks = ["showLoginFromReg", "showLoginFromForgot"];
+        backToLoginLinks.forEach(id => {
+            document.getElementById(id).addEventListener("click", (e) => {
+                e.preventDefault();
+                hideAllSections();
+                loginSection.classList.remove("hidden");
+            });
+        });
+
+        function showStatus(message, isError = true) {
+            status.innerText = message;
+            status.className = isError 
+                ? "w-full p-3 mb-4 text-sm border rounded bg-red-50 border-red-200 text-red-800 block"
+                : "w-full p-3 mb-4 text-sm border rounded bg-green-50 border-green-200 text-green-800 block";
+            window.scrollTo(0,0);
+        }
+
+           function redirectToDashboard(email) {
+            if (email === "admin.microdz@gmail.com") {
+                window.location.href = "admin-dashboard.html";
+                return;
+            }
+
+            window.location.href = "user-dashboard.html";
+        }
+        
+        // PROSES LOGIN
+        document.getElementById("loginForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                     redirectToDashboard(email);
+                })
+                .catch(err => {
+                    showStatus("Gagal masuk: " + err.message);
+                });
+        });
+
+        // PROSES REGISTER
+        document.getElementById("registerForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const email = document.getElementById("regEmail").value;
+            const password = document.getElementById("regPassword").value;
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    showStatus("Akun berhasil dibuat. Silakan login.", false);
+                    document.getElementById("regEmail").value = "";
+                    document.getElementById("regPassword").value = "";
+                    setTimeout(() => {
+                        hideAllSections();
+                        loginSection.classList.remove("hidden");
+                    }, 2000);
+                })
+                .catch(err => {
+                    showStatus("Gagal daftar: " + err.message);
+                });
+        });
+
+        // PROSES FORGOT PASSWORD
+        document.getElementById("forgotForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const email = document.getElementById("forgotEmail").value;
+
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    showStatus("Email reset password telah dikirim. Silakan cek inbox/spam Anda.", false);
+                    document.getElementById("forgotEmail").value = "";
+                })
+                .catch(err => {
+                    showStatus("Gagal: " + err.message);
+                });
+        });
+    </script>
+</body>
+</html>
