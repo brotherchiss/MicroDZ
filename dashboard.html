@@ -9,5 +9,28 @@
 <h1>Dashboard</h1>
 <p>Anda berhasil login.</p>
 
+    <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+  authDomain: "microdz-login.firebaseapp.com",
+  projectId: "microdz-login",
+  appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    // BELUM LOGIN → kembalikan ke halaman login
+    window.location.href = "index.html";
+  }
+});
+</script>
+
+
 </body>
 </html>
