@@ -1,6 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-6">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Dashboard Admin – Manajemen User</h1>
+    <button id="logoutBtn"
+      class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+      Logout
+    </button>
+  </div>
+
+  <!-- STATUS -->
+  <div id="status" class="mb-4 text-gray-600 font-medium">
+    Memeriksa autentikasi...
+  </div>
+
+  <!-- TABLE -->
+  <div class="overflow-x-auto">
+    <table class="w-full bg-white shadow rounded">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="p-2 text-left">Email</th>
+          <th class="p-2 text-left">Link Monitoring</th>
+          <th class="p-2 text-left">Link Laporan</th>
+          <th class="p-2 text-left">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="userTable">
+        <tr>
+          <td colspan="4" class="p-4 text-center text-gray-500">
+            Memuat data...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+<!-- ================= SCRIPT ================= -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } 
+  from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
   getFirestore,
   collection,
@@ -13,7 +60,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-/* === CONFIG === */
+/* ===== FIREBASE CONFIG ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
   authDomain: "microdz-login.firebaseapp.com",
@@ -21,77 +68,133 @@ const firebaseConfig = {
   appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
 };
 
+/* ===== INIT ===== */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const table = document.getElementById("userTable");
+const table  = document.getElementById("userTable");
+const status = document.getElementById("status");
+const logoutBtn = document.getElementById("logoutBtn");
 
-/* === AUTH === */
-onAuthStateChanged(auth, async user => {
+/* ===== LOGOUT ===== */
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+  location.href = "index.html";
+});
+
+/* ===== AUTH + ROLE CHECK ===== */
+onAuthStateChanged(auth, async (user) => {
   if (!user) {
     location.href = "index.html";
     return;
   }
-  loadUsers();
-});
 
-/* === LOAD USERS (ROLE USER ONLY) === */
-async function loadUsers() {
-  table.innerHTML = "";
+  status.innerText = "Memverifikasi hak akses admin...";
 
-  const q = query(collection(db, "users"), where("role", "==", "user"));
-  const snap = await getDocs(q);
+  const meSnap = await getDoc(doc(db, "users", user.uid));
 
-  if (snap.empty) {
-    table.innerHTML = `
-      <tr><td colspan="4" class="p-4 text-center">Tidak ada user</td></tr>`;
+  if (!meSnap.exists() || meSnap.data().role !== "admin") {
+    alert("Akses ditolak. Anda bukan admin.");
+    location.href = "index.html";
     return;
   }
 
-  for (const d of snap.docs) {
-    const u = d.data();
-    const uid = d.id;
+  status.remove();
+  loadUsers();
+});
 
-    // Ambil link lama (jika ada)
-    const linkSnap = await getDoc(doc(db, "userLinks", uid));
-    const links = linkSnap.exists() ? linkSnap.data() : {};
+/* ===== LOAD USERS (ROLE = user) ===== */
+async function loadUsers() {
+  table.innerHTML = "";
 
-    table.innerHTML += `
-      <tr class="border-t">
-        <td class="p-2">${u.email}</td>
-        <td class="p-2">
-          <input id="mon-${uid}" value="${links.monitoringUrl || ""}"
-            class="border p-1 w-full text-sm"
-            placeholder="Link Monitoring">
+  try {
+    const q = query(
+      collection(db, "users"),
+      where("role", "==", "user")
+    );
+
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      table.innerHTML = `
+        <tr>
+          <td colspan="4" class="p-4 text-center text-gray-500">
+            Tidak ada user
+          </td>
+        </tr>`;
+      return;
+    }
+
+    for (const d of snap.docs) {
+      const u = d.data();
+      const uid = d.id;
+
+      const linkSnap = await getDoc(doc(db, "userLinks", uid));
+      const links = linkSnap.exists() ? linkSnap.data() : {};
+
+      table.innerHTML += `
+        <tr class="border-t hover:bg-gray-50">
+          <td class="p-2 text-sm">${u.email || "-"}</td>
+
+          <td class="p-2">
+            <input
+              id="mon-${uid}"
+              value="${links.monitoringUrl || ""}"
+              placeholder="https://monitoring..."
+              class="border p-1 w-full text-sm rounded"
+            />
+          </td>
+
+          <td class="p-2">
+            <input
+              id="rep-${uid}"
+              value="${links.reportUrl || ""}"
+              placeholder="https://laporan..."
+              class="border p-1 w-full text-sm rounded"
+            />
+          </td>
+
+          <td class="p-2">
+            <button
+              onclick="saveLink('${uid}')"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+              Simpan
+            </button>
+          </td>
+        </tr>
+      `;
+    }
+
+  } catch (err) {
+    console.error(err);
+    table.innerHTML = `
+      <tr>
+        <td colspan="4" class="p-4 text-center text-red-600">
+          Gagal memuat data user
         </td>
-        <td class="p-2">
-          <input id="rep-${uid}" value="${links.reportUrl || ""}"
-            class="border p-1 w-full text-sm"
-            placeholder="Link Laporan">
-        </td>
-        <td class="p-2">
-          <button onclick="saveLink('${uid}')"
-            class="bg-blue-600 text-white px-3 py-1 rounded text-sm">
-            Simpan
-          </button>
-        </td>
-      </tr>
-    `;
+      </tr>`;
   }
 }
 
-/* === SAVE LINK PER USER === */
+/* ===== SAVE LINK PER USER ===== */
 window.saveLink = async (uid) => {
   const monitoringUrl = document.getElementById(`mon-${uid}`).value.trim();
-  const reportUrl = document.getElementById(`rep-${uid}`).value.trim();
+  const reportUrl     = document.getElementById(`rep-${uid}`).value.trim();
 
-  await setDoc(doc(db, "userLinks", uid), {
-    monitoringUrl,
-    reportUrl,
-    updatedAt: serverTimestamp()
-  });
+  await setDoc(
+    doc(db, "userLinks", uid),
+    {
+      monitoringUrl,
+      reportUrl,
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
 
-  alert("Link user berhasil disimpan");
+  alert("Link berhasil disimpan");
 };
 </script>
+
+</body>
+</html>
