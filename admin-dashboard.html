@@ -140,13 +140,24 @@ onAuthStateChanged(auth, (user) => {
 
     document.getElementById("settingsUrlLabel").innerText = settingsUrl;
 
-    const linksCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'clientLinks');
+    const linksCollectionRef = collection(db, "artifacts", appId, "public", "data", "clientLinks");
+    const usersCollectionRef = collection(db, "artifacts", appId, "public", "data", "users");
     const linksQuery = query(linksCollectionRef, orderBy("email"));
+    const usersQuery = query(usersCollectionRef, orderBy("email"));
     const tableBody = document.getElementById("userLinkTable");
+    let userMap = new Map();
+    let linkMap = new Map();
 
-    onSnapshot(linksQuery, (snapshot) => {
+    const renderUserTable = () => {
+        const emailSet = new Set([
+            ...Array.from(userMap.keys()),
+            ...Array.from(linkMap.keys())
+        ]);
+
+        const emails = Array.from(emailSet).sort();
         tableBody.innerHTML = "";
-        if (snapshot.empty) {
+
+        if (emails.length === 0) {
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="4" class="px-4 py-6 text-center text-gray-500">Belum ada data user.</td>
@@ -155,27 +166,51 @@ onAuthStateChanged(auth, (user) => {
             return;
         }
 
-        snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
+        emails.forEach((email) => {
+            const linkData = linkMap.get(email) || {};
             const row = document.createElement("tr");
             row.innerHTML = `
-                <td class="px-4 py-3 font-medium text-gray-700">${data.email ?? "-"}</td>
+                <td class="px-4 py-3 font-medium text-gray-700">${email}</td>
                 <td class="px-4 py-3">
-                    ${data.monitoringUrl
-                        ? `<a href="${data.monitoringUrl}" target="_blank" class="text-blue-600 hover:underline">Buka Monitoring</a>`
+                    ${linkData.monitoringUrl
+                        ? `<a href="${linkData.monitoringUrl}" target="_blank" class="text-blue-600 hover:underline">Buka Monitoring</a>`
                         : `<span class="text-gray-400">Belum diatur</span>`}
                 </td>
                 <td class="px-4 py-3">
-                    ${data.reportUrl
-                        ? `<a href="${data.reportUrl}" target="_blank" class="text-blue-600 hover:underline">Buka Laporan</a>`
+                    ${linkData.reportUrl
+                        ? `<a href="${linkData.reportUrl}" target="_blank" class="text-blue-600 hover:underline">Buka Laporan</a>`
                         : `<span class="text-gray-400">Belum diatur</span>`}
                 </td>
                 <td class="px-4 py-3">
-                    <a href="${data.settingsUrl ?? settingsUrl}" target="_blank" class="text-blue-600 hover:underline">Pengaturan Akun</a>
+                    <a href="${linkData.settingsUrl ?? settingsUrl}" target="_blank" class="text-blue-600 hover:underline">Pengaturan Akun</a>
                 </td>
             `;
             tableBody.appendChild(row);
         });
+    };
+
+    onSnapshot(usersQuery, (snapshot) => {
+        userMap = new Map();
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data?.email) {
+                userMap.set(data.email, data);
+            }
+        });
+        renderUserTable();
+    }, (error) => {
+        console.error("Gagal memuat daftar user:", error);
+    });
+
+    onSnapshot(linksQuery, (snapshot) => {
+        linkMap = new Map();
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data?.email) {
+                linkMap.set(data.email, data);
+            }
+        });
+        renderUserTable();
     }, (error) => {
         console.error("Gagal memuat link klien:", error);
     });
