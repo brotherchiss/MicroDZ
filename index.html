@@ -1,594 +1,419 @@
 <!DOCTYPE html>
-
 <html lang="id">
-
 <head>
-
     <meta charset="UTF-8" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <title>MicroDZ Login</title>
-
-
+    <title>MicroDZ | Control Center</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-
-
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-green: #39ff14;
+            --dark-bg: #0a0b10;
+            --panel-bg: rgba(16, 18, 27, 0.8);
+            --border-color: rgba(0, 243, 255, 0.3);
+        }
 
         body {
+            background-color: var(--dark-bg);
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 2px 2px, rgba(0, 243, 255, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
 
-            background-color: #f6f8fa;
-
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
         }
 
         .microdz-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+        }
 
-            background-color: #ffffff;
+        /* Dekit Microcontroller Accent */
+        .microdz-card::before {
+            content: "";
+            position: absolute;
+            top: -1px;
+            left: 20px;
+            width: 40px;
+            height: 2px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
 
-            border: 1px solid #d0d7de;
-
-            border-radius: 6px;
-
+        .btn-futuristic {
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-green {
-
-            background-color: #2da44e;
-
-            color: white;
-
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            background: rgba(57, 255, 20, 0.05);
         }
-
         .btn-green:hover {
-
-            background-color: #2c974b;
-
+            background: var(--neon-green);
+            color: black;
+            box-shadow: 0 0 20px var(--neon-green);
         }
 
         .btn-blue {
-
-            background-color: #0969da;
-
-            color: white;
-
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.05);
         }
-
         .btn-blue:hover {
-
-            background-color: #0860ca;
-
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 20px var(--neon-blue);
         }
 
         .btn-yellow {
-
-            background-color: #d69e2e;
-
-            color: white;
-
+            border: 1px solid #ffcc00;
+            color: #ffcc00;
+            background: rgba(255, 204, 0, 0.05);
         }
-
         .btn-yellow:hover {
-
-            background-color: #b7791f;
-
+            background: #ffcc00;
+            color: black;
+            box-shadow: 0 0 20px #ffcc00;
         }
 
         .input-field {
-
-            border: 1px solid #d0d7de;
-
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            color: white;
+            transition: all 0.3s;
         }
-
         .input-field:focus {
-
-            border-color: #0969da;
-
+            border-color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.07);
             outline: none;
-
-            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
-
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
         }
 
-        .hidden {
-
-            display: none;
-
+        .label-tech {
+            font-size: 0.7rem;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: block;
+            opacity: 0.8;
         }
 
+        .status-box {
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Scanline Effect */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .hidden { display: none; }
     </style>
-
 </head>
-
-
 
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-
-
-<h1 class="text-3xl font-bold mb-8 text-gray-800 cursor-pointer" onclick="location.reload()">MicroDZ</h1>
-
-
-
-<div class="w-full max-w-[340px]">
-
-
-
-    <!-- STATUS -->
-
-    <div id="status" class="hidden"></div>
-
-
-
-    <!-- LOGIN -->
-
-    <div id="loginSection">
-
-        <div class="microdz-card p-6 mb-4 shadow-sm">
-
-            <h2 class="text-lg font-semibold mb-4">Masuk</h2>
-
-
-
-            <form id="loginForm">
-
-                <div class="mb-3">
-
-                    <label class="text-sm">Email</label>
-
-                    <input id="loginEmail" type="email" class="input-field w-full px-3 py-2 rounded text-sm" required />
-
-                </div>
-
-
-
-                <div class="mb-4">
-
-                    <label class="text-sm">Password</label>
-
-                    <input id="loginPassword" type="password" class="input-field w-full px-3 py-2 rounded text-sm" required />
-
-                </div>
-
-
-
-                <button class="btn-green w-full py-2 rounded text-sm font-semibold">Login</button>
-
-            </form>
-
-        </div>
-
-
-
-        <div class="microdz-card p-4 text-center text-sm">
-
-            Baru di MicroDZ?
-
-            <a href="#" id="showRegister" class="text-blue-600">Buat akun</a> | 
-
-            <a href="#" id="showForgot" class="text-blue-600">Lupa password?</a>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- REGISTER -->
-
-    <div id="registerSection" class="hidden">
-
-        <div class="microdz-card p-6 mb-4 shadow-sm">
-
-            <h2 class="text-lg font-semibold mb-4">Daftar Akun</h2>
-
-
-
-            <form id="registerForm">
-
-                <div class="mb-3">
-
-                    <label class="text-sm">Email</label>
-
-                    <input id="regEmail" type="email" class="input-field w-full px-3 py-2 rounded text-sm" required />
-
-                </div>
-
-
-
-                <div class="mb-4">
-
-                    <label class="text-sm">Password</label>
-
-                    <input id="regPassword" type="password" class="input-field w-full px-3 py-2 rounded text-sm" required />
-
-                </div>
-
-
-
-                <button class="btn-blue w-full py-2 rounded text-sm font-semibold">Daftar</button>
-
-            </form>
-
-        </div>
-
-
-
-        <div class="text-center text-sm">
-
-            <a href="#" id="backToLoginFromRegister" class="text-blue-600">Kembali ke login</a>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- FORGOT PASSWORD -->
-
-    <div id="forgotSection" class="hidden">
-
-        <div class="microdz-card p-6 mb-4 shadow-sm">
-
-            <h2 class="text-lg font-semibold mb-4">Reset Password</h2>
-
-
-
-            <form id="forgotForm">
-
-                <div class="mb-4">
-
-                    <label class="text-sm">Masukkan email Anda</label>
-
-                    <input id="forgotEmail" type="email" class="input-field w-full px-3 py-2 rounded text-sm" required />
-
-                </div>
-
-
-
-                <button class="btn-yellow w-full py-2 rounded text-sm font-semibold">Kirim Link Reset Password</button>
-
-            </form>
-
-        </div>
-
-
-
-        <div class="text-center text-sm">
-
-            <a href="#" id="backToLoginFromForgot" class="text-blue-600">Kembali ke login</a>
-
-        </div>
-
-    </div>
-
-
-
+<!-- CIRCUIT DECORATION -->
+<div class="fixed top-0 left-0 w-full h-full pointer-events-none opacity-20 overflow-hidden z-0">
+    <svg width="100%" height="100%">
+        <path d="M0 100 L100 100 L150 150 L300 150" stroke="#00f3ff" fill="none" stroke-width="1"/>
+        <path d="M100% 200 Lcalc(100% - 100px) 200 Lcalc(100% - 150px) 250" stroke="#00f3ff" fill="none" stroke-width="1"/>
+        <circle cx="300" cy="150" r="3" fill="#00f3ff"/>
+        <circle cx="0" cy="100" r="3" fill="#00f3ff"/>
+    </svg>
 </div>
 
+<header class="relative z-10 text-center mb-8">
+    <h1 class="text-4xl font-bold text-white cursor-pointer mb-2" onclick="location.reload()">MICRODZ</h1>
+    <p class="text-[10px] text-cyan-500 tracking-[0.3em] font-bold">SYSTEM_AUTHENTICATION_v2.5</p>
+</header>
 
+<main class="w-full max-w-[360px] relative z-10">
 
-<p class="mt-8 text-xs text-gray-500">© 2025 MicroDZ</p>
+    <!-- STATUS DISPLAY -->
+    <div id="status" class="hidden status-box font-bold text-center uppercase tracking-tighter mb-4 py-2 border-l-4"></div>
 
+    <!-- LOGIN SECTION -->
+    <section id="loginSection">
+        <div class="microdz-card p-8 mb-6">
+            <h2 class="text-xs font-bold mb-6 text-cyan-400 border-b border-cyan-900 pb-2 flex justify-between items-center">
+                <span>> ACCESS_PORT</span>
+                <span class="animate-pulse">● READY</span>
+            </h2>
 
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label class="label-tech">UID / Email</label>
+                    <input id="loginEmail" type="email" class="input-field w-full px-4 py-3 rounded text-sm" placeholder="user@microdz.io" required />
+                </div>
 
-<!-- FIREBASE SCRIPT -->
+                <div class="mb-6">
+                    <label class="label-tech">Access_Key</label>
+                    <input id="loginPassword" type="password" class="input-field w-full px-4 py-3 rounded text-sm" placeholder="••••••••" required />
+                </div>
 
+                <button class="btn-futuristic btn-green w-full py-3 rounded text-xs font-bold">Initiate Login</button>
+            </form>
+        </div>
+
+        <div class="microdz-card p-4 text-center text-[11px] bg-opacity-40">
+            <span class="opacity-60 text-white">SYSTEM_NEW_NODE?</span>
+            <a href="#" id="showRegister" class="text-cyan-400 hover:underline font-bold ml-1">REGISTER</a>
+            <span class="mx-2 opacity-20">|</span>
+            <a href="#" id="showForgot" class="text-gray-400 hover:text-white transition italic">Lost Key?</a>
+        </div>
+    </section>
+
+    <!-- REGISTER SECTION -->
+    <section id="registerSection" class="hidden">
+        <div class="microdz-card p-8 mb-6">
+            <h2 class="text-xs font-bold mb-6 text-blue-400 border-b border-blue-900 pb-2">
+                > INITIALIZE_NEW_USER
+            </h2>
+
+            <form id="registerForm">
+                <div class="mb-4">
+                    <label class="label-tech">Identify Email</label>
+                    <input id="regEmail" type="email" class="input-field w-full px-4 py-3 rounded text-sm" required />
+                </div>
+
+                <div class="mb-6">
+                    <label class="label-tech">Set Password</label>
+                    <input id="regPassword" type="password" class="input-field w-full px-4 py-3 rounded text-sm" required />
+                </div>
+
+                <button class="btn-futuristic btn-blue w-full py-3 rounded text-xs font-bold">Execute Registration</button>
+            </form>
+        </div>
+
+        <div class="text-center">
+            <a href="#" id="backToLoginFromRegister" class="text-[10px] text-cyan-500 hover:text-white tracking-widest uppercase">« ABORT & RETURN</a>
+        </div>
+    </section>
+
+    <!-- FORGOT PASSWORD SECTION -->
+    <section id="forgotSection" class="hidden">
+        <div class="microdz-card p-8 mb-6">
+            <h2 class="text-xs font-bold mb-6 text-yellow-400 border-b border-yellow-900 pb-2">
+                > RECOVERY_PROTOCOL
+            </h2>
+
+            <form id="forgotForm">
+                <div class="mb-6">
+                    <label class="label-tech">Registered Email</label>
+                    <input id="forgotEmail" type="email" class="input-field w-full px-4 py-3 rounded text-sm" placeholder="Waiting for input..." required />
+                </div>
+
+                <button class="btn-futuristic btn-yellow w-full py-3 rounded text-xs font-bold">Request Reset Signal</button>
+            </form>
+        </div>
+
+        <div class="text-center">
+            <a href="#" id="backToLoginFromForgot" class="text-[10px] text-cyan-500 hover:text-white tracking-widest uppercase">« CANCEL_RECOVERY</a>
+        </div>
+    </section>
+
+</main>
+
+<footer class="mt-12 text-center relative z-10">
+    <div class="text-[9px] text-gray-600 mb-1">HARDWARE ID: 0xFF-DZ-2025-ALPHA</div>
+    <p class="text-[10px] text-cyan-900 font-bold uppercase tracking-[0.2em]">© 2025 MicroDZ Digital Systems</p>
+</footer>
+
+<!-- FIREBASE SCRIPT (Logika Asli Anda) -->
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
 import {
-
     getAuth,
-
     signInWithEmailAndPassword,
-
     createUserWithEmailAndPassword,
-
     sendPasswordResetEmail
-
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-
-
 import {
-
     getFirestore,
-
     doc,
-
     setDoc,
-
     getDoc,
-
     serverTimestamp
-
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-
-
 /* ================= FIREBASE CONFIG ================= */
-
 const firebaseConfig = {
-
     apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-
     authDomain: "microdz-login.firebaseapp.com",
-
     projectId: "microdz-login",
-
     appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-
 };
-
-
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getFirestore(app);
 
-
-
 /* ================= UI HANDLER ================= */
-
 const status = document.getElementById("status");
-
 const loginSection = document.getElementById("loginSection");
-
 const registerSection = document.getElementById("registerSection");
-
 const forgotSection = document.getElementById("forgotSection");
 
-
-
 function showStatus(msg, error = true) {
-
-    status.textContent = msg;
-
+    status.textContent = `> ${msg.toUpperCase()}`;
     status.className = error
-
-        ? "block p-3 mb-4 text-sm bg-red-50 border border-red-200 text-red-800 rounded"
-
-        : "block p-3 mb-4 text-sm bg-green-50 border border-green-200 text-green-800 rounded";
-
+        ? "block p-3 mb-4 text-xs bg-red-900/20 border-red-500 text-red-500 rounded status-box"
+        : "block p-3 mb-4 text-xs bg-green-900/20 border-green-500 text-green-500 rounded status-box";
+    status.classList.remove("hidden");
 }
-
-
 
 function hideAll() {
-
     loginSection.classList.add("hidden");
-
     registerSection.classList.add("hidden");
-
     forgotSection.classList.add("hidden");
-
     status.classList.add("hidden");
-
 }
 
-
-
 /* ================= NAV ================= */
-
 document.getElementById("showRegister").onclick = e => {
-
     e.preventDefault();
-
     hideAll();
-
     registerSection.classList.remove("hidden");
-
 };
-
-
 
 document.getElementById("backToLoginFromRegister").onclick = e => {
-
     e.preventDefault();
-
     hideAll();
-
     loginSection.classList.remove("hidden");
-
 };
-
-
 
 document.getElementById("showForgot").onclick = e => {
-
     e.preventDefault();
-
     hideAll();
-
     forgotSection.classList.remove("hidden");
-
 };
-
-
 
 document.getElementById("backToLoginFromForgot").onclick = e => {
-
     e.preventDefault();
-
     hideAll();
-
     loginSection.classList.remove("hidden");
-
 };
 
-
-
 /* ================= LOGIN ================= */
-
 document.getElementById("loginForm").addEventListener("submit", async e => {
-
     e.preventDefault();
-
-
+    showStatus("Authenticating...", false);
 
     const email = loginEmail.value;
-
     const password = loginPassword.value;
 
-
-
     try {
-
         const cred = await signInWithEmailAndPassword(auth, email, password);
-
         const uid = cred.user.uid;
 
-
-
         const snap = await getDoc(doc(db, "users", uid));
-
         if (!snap.exists()) {
-
-            showStatus("Data user tidak ditemukan di database");
-
+            showStatus("Database Error: User Node Missing");
             return;
-
         }
-
-
 
         const role = snap.data().role;
-
-        if (role === "admin") {
-
-            location.href = "admin-dashboard.html";
-
-        } else {
-
-            location.href = "user-dashboard.html";
-
-        }
-
-
+        showStatus("Access Granted. Redirecting...", false);
+        
+        setTimeout(() => {
+            if (role === "admin") {
+                location.href = "admin-dashboard.html";
+            } else {
+                location.href = "user-dashboard.html";
+            }
+        }, 1000);
 
     } catch (err) {
-
-        showStatus(err.message);
-
+        showStatus(err.code || err.message);
     }
-
 });
-
-
 
 /* ================= REGISTER ================= */
-
 document.getElementById("registerForm").addEventListener("submit", async e => {
-
     e.preventDefault();
-
-
+    showStatus("Compiling User Node...", false);
 
     const email = regEmail.value;
-
     const password = regPassword.value;
 
-
-
     try {
-
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-
         const user = cred.user;
 
-
-
         await setDoc(doc(db, "users", user.uid), {
-
             email: user.email,
-
             role: "user",
-
             status: "active",
-
             createdAt: serverTimestamp()
-
         });
 
-
-
-        showStatus("Akun berhasil dibuat. Silakan login.", false);
-
-
+        showStatus("Node Created. Return to Login.", false);
 
         setTimeout(() => {
-
             hideAll();
-
             loginSection.classList.remove("hidden");
-
-        }, 1500);
-
-
+        }, 2000);
 
     } catch (err) {
-
         showStatus(err.message);
-
     }
-
 });
 
-
-
 /* ================= FORGOT PASSWORD ================= */
-
 document.getElementById("forgotForm").addEventListener("submit", async e => {
-
     e.preventDefault();
-
-
+    showStatus("Transmitting Signal...", false);
 
     const email = forgotEmail.value;
 
-
-
     try {
-
         await sendPasswordResetEmail(auth, email);
-
-        showStatus("Link reset password telah dikirim ke email Anda.", false);
-
-
+        showStatus("Signal Sent. Check Inbox.", false);
 
         setTimeout(() => {
-
             hideAll();
-
             loginSection.classList.remove("hidden");
-
         }, 3000);
 
-
-
     } catch (err) {
-
         showStatus(err.message);
-
     }
-
 });
-
 </script>
 
-
-
 </body>
-
 </html>
-
-
-
