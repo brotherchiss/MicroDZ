@@ -142,12 +142,7 @@
             const email = document.getElementById("username").value;
             const password = document.getElementById("password").value;
             loginFirebase(email, password);
-            const alert = document.getElementById('alertBox');
-            alert.classList.remove('hidden');
-            alert.innerText = "Mencoba masuk ke akun MicroDZ...";
-            setTimeout(() => {
-                alert.innerText = "Gagal masuk. Akun tidak ditemukan.";
-            }, 1000);
+            
         }
 
         function handleRegister(e) {
@@ -182,8 +177,9 @@ const auth = getAuth(app);
 window.loginFirebase = function(email, password) {
   signInWithEmailAndPassword(auth, email, password)
     .then(() => {
-      alert("Login berhasil");
-    })
+  window.location.href = "dashboard.html";
+})
+
     .catch(() => {
       alert("Email atau password salah");
     });
