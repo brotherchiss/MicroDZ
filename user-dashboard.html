@@ -1,109 +1,221 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <title>User Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroDZ | User Terminal</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --bg-base: #05070a;
+            --card-bg: rgba(13, 17, 23, 0.8);
+        }
+
+        body {
+            background-color: var(--bg-base);
+            font-family: 'Space Grotesk', sans-serif;
+            color: #e2e8f0;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            min-height: 100vh;
+        }
+
+        .cyber-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 5% 100%, 0 95%);
+        }
+
+        .btn-action {
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-action:not(:disabled):hover {
+            background: var(--primary);
+            color: black;
+            box-shadow: 0 0 25px var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-action:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .btn-logout {
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+        }
+
+        .btn-logout:hover {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 0 15px #ef4444;
+        }
+
+        .status-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 2px;
+            color: var(--primary);
+        }
+
+        .glitch-text {
+            animation: glitch 3s infinite;
+        }
+
+        @keyframes glitch {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; text-shadow: 1px 0 var(--secondary); }
+            100% { opacity: 1; }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
+<body class="flex flex-col items-center justify-center p-6">
 
-  <h1 class="text-2xl font-bold mb-6">Dashboard User</h1>
-  <p id="welcomeMsg" class="mb-6 text-lg"></p>
+    <div class="w-full max-w-lg">
+        <!-- TOP DECOR -->
+        <div class="flex justify-between items-end mb-4 px-2">
+            <div class="text-[10px] font-mono text-cyan-500/50">
+                USER_ID: <span id="userIdLabel">FETCHING...</span>
+            </div>
+            <div class="status-badge animate-pulse">SYSTEM ACTIVE</div>
+        </div>
 
-  <button id="monitoringBtn" class="w-full bg-green-600 text-white py-3 rounded mb-4" disabled>
-    Monitoring Perangkat
-  </button>
+        <!-- MAIN TERMINAL -->
+        <div class="cyber-card p-8 md:p-12 relative">
+            <div class="mb-10 text-center">
+                <h1 class="text-xs font-mono text-gray-500 uppercase tracking-[0.5em] mb-2">Authenticated Interface</h1>
+                <h2 id="welcomeMsg" class="text-2xl font-bold text-white uppercase tracking-tight glitch-text">
+                    Initializing...
+                </h2>
+            </div>
 
-  <button id="reportBtn" class="w-full bg-indigo-600 text-white py-3 rounded" disabled>
-    Laporan
-  </button>
+            <div class="space-y-6">
+                <!-- MONITORING BUTTON -->
+                <div class="relative group">
+                    <div class="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-8 bg-cyan-500 opacity-0 group-hover:opacity-100 transition-all"></div>
+                    <button id="monitoringBtn" class="btn-action w-full py-5 rounded-sm flex items-center justify-between px-8" disabled>
+                        <span>Monitoring Perangkat</span>
+                        <span class="text-[10px] font-mono opacity-50">CMD: VIEW_NODE</span>
+                    </button>
+                </div>
 
-  <button id="logoutBtn" class="mt-6 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-    Logout
-  </button>
+                <!-- REPORT BUTTON -->
+                <div class="relative group">
+                    <div class="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-8 bg-purple-500 opacity-0 group-hover:opacity-100 transition-all"></div>
+                    <button id="reportBtn" class="btn-action w-full py-5 rounded-sm flex items-center justify-between px-8" style="--primary: #7000ff; border-color: rgba(112, 0, 255, 0.3);" disabled>
+                        <span>Laporan Analis</span>
+                        <span class="text-[10px] font-mono opacity-50">CMD: GET_LOGS</span>
+                    </button>
+                </div>
+            </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+            <!-- FOOTER ACTION -->
+            <div class="mt-12 pt-8 border-t border-white/5 flex flex-col items-center">
+                <button id="logoutBtn" class="btn-logout px-8 py-2 uppercase font-bold transition-all">
+                    Disconnect Session
+                </button>
+                <p class="text-[8px] font-mono text-gray-600 mt-6 tracking-[0.4em]">© 2025 MICRODZ CRYPTOGRAPHIC SYSTEMS</p>
+            </div>
+        </div>
+    </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-      authDomain: "microdz-login.firebaseapp.com",
-      projectId: "microdz-login",
-      appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-    };
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+        const firebaseConfig = {
+            apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+            authDomain: "microdz-login.firebaseapp.com",
+            projectId: "microdz-login",
+            appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+        };
 
-    const monitoringBtn = document.getElementById("monitoringBtn");
-    const reportBtn = document.getElementById("reportBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const welcomeMsg = document.getElementById("welcomeMsg");
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = "microdz-monitor";
 
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      location.href = "index.html";
-    });
+        const monitoringBtn = document.getElementById("monitoringBtn");
+        const reportBtn = document.getElementById("reportBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const welcomeMsg = document.getElementById("welcomeMsg");
+        const userIdLabel = document.getElementById("userIdLabel");
 
-    // Fungsi untuk memastikan URL lengkap (http:// atau https:// dan www jika perlu)
-    function ensureAbsoluteUrl(url) {
-      if (!url) return null;
+        /* LOGOUT PROTOCOL */
+        logoutBtn.onclick = async () => {
+            await signOut(auth);
+            location.href = "index.html";
+        };
 
-      if (!url.startsWith("http://") && !url.startsWith("https://")) {
-        if (!url.startsWith("www.")) {
-          url = "www." + url;
+        /* URL FORMATTER */
+        function ensureAbsoluteUrl(url) {
+            if (!url) return null;
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                return "https://" + (url.startsWith("www.") ? url : "www." + url);
+            }
+            return url;
         }
-        url = "https://" + url;
-      }
-      return url;
-    }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        location.href = "index.html";
-        return;
-      }
+        /* SESSION HANDLER */
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                location.href = "index.html";
+                return;
+            }
 
-      welcomeMsg.textContent = `Selamat datang, ${user.email}`;
+            welcomeMsg.textContent = user.email.split('@')[0];
+            userIdLabel.textContent = user.uid.substring(0, 12) + "...";
 
-      try {
-        const snap = await getDoc(doc(db, "userLinks", user.uid));
+            try {
+                // Mengambil data dari path terpusat: artifacts/{appId}/users/{userId}/links/config
+                const linkRef = doc(db, 'artifacts', appId, 'users', user.uid, 'links', 'config');
+                const snap = await getDoc(linkRef);
 
-        if (!snap.exists()) {
-          monitoringBtn.disabled = true;
-          reportBtn.disabled = true;
-          return;
-        }
+                if (!snap.exists()) {
+                    console.warn("No configuration found for this identity.");
+                    return;
+                }
 
-        const data = snap.data();
+                const data = snap.data();
 
-        if (data.monitoringUrl) {
-          monitoringBtn.disabled = false;
-          monitoringBtn.onclick = () => {
-            window.open(ensureAbsoluteUrl(data.monitoringUrl), "_blank");
-          };
-        } else {
-          monitoringBtn.disabled = true;
-        }
+                if (data.monitoringUrl) {
+                    monitoringBtn.disabled = false;
+                    monitoringBtn.onclick = () => window.open(ensureAbsoluteUrl(data.monitoringUrl), "_blank");
+                }
 
-        if (data.reportUrl) {
-          reportBtn.disabled = false;
-          reportBtn.onclick = () => {
-            window.open(ensureAbsoluteUrl(data.reportUrl), "_blank");
-          };
-        } else {
-          reportBtn.disabled = true;
-        }
-      } catch (error) {
-        console.error("Gagal memuat link:", error);
-        monitoringBtn.disabled = true;
-        reportBtn.disabled = true;
-      }
-    });
-  </script>
-
+                if (data.reportUrl) {
+                    reportBtn.disabled = false;
+                    reportBtn.onclick = () => window.open(ensureAbsoluteUrl(data.reportUrl), "_blank");
+                }
+            } catch (error) {
+                console.error("Critical link fetch error:", error);
+            }
+        });
+    </script>
 </body>
 </html>
