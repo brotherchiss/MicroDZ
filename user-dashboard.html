@@ -34,24 +34,27 @@
     </div>
 
     <!-- CLIENT ACCESS SECTION (Hanya muncul jika ada link dari admin) -->
-    <div id="clientLinkSection" class="bg-blue-600 rounded shadow p-6 mb-6 hidden">
-        <h3 class="text-white font-semibold mb-3">Akses Khusus Anda</h3>
-        <p class="text-blue-100 text-sm mb-4">Admin telah memberikan akses link khusus untuk akun Anda.</p>
-        <a id="clientActionBtn" href="#" target="_blank" 
-           class="inline-block bg-white text-blue-600 font-bold py-3 px-6 rounded-lg shadow hover:bg-gray-100 transition-colors">
-            Buka Link Akses Saya →
-        </a>
+    <div id="clientLinkSection" class="bg-white rounded shadow p-6 mb-6 hidden">
+        <h3 class="font-semibold text-gray-800 mb-2">Akses Khusus Anda</h3>
+        <p class="text-sm text-gray-500 mb-4">Pilih tombol di bawah untuk membuka link yang telah disediakan admin.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a id="monitoringBtn" href="#" target="_blank"
+               class="block text-center bg-blue-600 text-white font-semibold py-3 rounded-lg shadow hover:bg-blue-700 transition-colors">
+                Monitoring Perangkat
+            </a>
+            <a id="reportBtn" href="#" target="_blank"
+               class="block text-center bg-emerald-600 text-white font-semibold py-3 rounded-lg shadow hover:bg-emerald-700 transition-colors">
+                Data & Laporan
+            </a>
+            <a id="settingsBtn" href="#" target="_blank"
+               class="block text-center bg-slate-600 text-white font-semibold py-3 rounded-lg shadow hover:bg-slate-700 transition-colors">
+                Pengaturan Akun
+            </a>
+        </div>
     </div>
 
-    <!-- MENU UMUM -->
-    <div class="bg-white rounded shadow p-6 mb-6 text-gray-700">
-        <h3 class="font-semibold mb-2">Menu Utama</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Monitoring Perangkat</div>
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Kontrol Sistem</div>
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Data & Laporan</div>
-            <div class="p-4 border rounded hover:bg-gray-50 cursor-pointer">Pengaturan Akun</div>
-        </div>
+    <div id="emptyState" class="bg-white rounded shadow p-6 text-center text-gray-500">
+        Link akses Anda belum tersedia. Silakan tunggu admin menambahkan link untuk akun ini.
     </div>
 
 </main>
@@ -96,13 +99,25 @@ onAuthStateChanged(auth, (user) => {
     const linkDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'clientLinks', docId);
 
     onSnapshot(linkDocRef, (docSnap) => {
+        const section = document.getElementById("clientLinkSection");
+        const emptyState = document.getElementById("emptyState");
+        const monitoringBtn = document.getElementById("monitoringBtn");
+        const reportBtn = document.getElementById("reportBtn");
+        const settingsBtn = document.getElementById("settingsBtn");
+
         if (docSnap.exists()) {
             const data = docSnap.data();
-            const section = document.getElementById("clientLinkSection");
-            const btn = document.getElementById("clientActionBtn");
-            
-            section.classList.remove("hidden");
-            btn.href = data.url;
+            const hasLinks = Boolean(data.monitoringUrl || data.reportUrl || data.settingsUrl);
+
+            monitoringBtn.href = data.monitoringUrl ?? "#";
+            reportBtn.href = data.reportUrl ?? "#";
+            settingsBtn.href = data.settingsUrl ?? "pengaturan-akun.html";
+
+            section.classList.toggle("hidden", !hasLinks);
+            emptyState.classList.toggle("hidden", hasLinks);
+        } else {
+            section.classList.add("hidden");
+            emptyState.classList.remove("hidden");
         }
     }, (error) => {
         console.error("Gagal memuat link klien:", error);
