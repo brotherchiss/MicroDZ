@@ -184,6 +184,15 @@
             window.scrollTo(0,0);
         }
 
+           function redirectToDashboard(email) {
+            if (email === "admin.microdz@gmail.com") {
+                window.location.href = "admin-dashboard.html";
+                return;
+            }
+
+            window.location.href = "user-dashboard.html";
+        }
+        
         // PROSES LOGIN
         document.getElementById("loginForm").addEventListener("submit", e => {
             e.preventDefault();
@@ -192,7 +201,7 @@
 
             signInWithEmailAndPassword(auth, email, password)
                 .then(() => {
-                    window.location.href = "dashboard.html";
+                     redirectToDashboard(email);
                 })
                 .catch(err => {
                     showStatus("Gagal masuk: " + err.message);
