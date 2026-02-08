@@ -5,66 +5,132 @@
   <title>Dashboard Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-6">
 
-  <h1 class="text-2xl font-bold mb-4">Dashboard Admin – Daftar User</h1>
+<body class="bg-gray-100 min-h-screen p-6">
 
-  <table class="w-full bg-white shadow rounded">
-    <thead class="bg-gray-200">
-      <tr>
-        <th class="p-2 text-left">UID</th>
-        <th class="p-2 text-left">Email</th>
-        <th class="p-2 text-left">Role</th>
-        <th class="p-2 text-left">Tanggal</th>
-      </tr>
-    </thead>
-    <tbody id="userTable"></tbody>
-  </table>
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Dashboard Admin – Daftar User</h1>
 
+    <button id="logoutBtn"
+      class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+      Logout
+    </button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="overflow-x-auto">
+    <table class="w-full bg-white shadow rounded">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="p-2 text-left">UID</th>
+          <th class="p-2 text-left">Email</th>
+          <th class="p-2 text-left">Role</th>
+          <th class="p-2 text-left">Tanggal</th>
+        </tr>
+      </thead>
+      <tbody id="userTable">
+        <tr>
+          <td colspan="4" class="p-4 text-center text-gray-500">
+            Memuat data...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+<!-- SCRIPT -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  signOut 
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
+import { 
+  getDatabase, 
+  ref, 
+  get 
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+/* ================= CONFIG ================= */
 const firebaseConfig = {
-    apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-    authDomain: "microdz-login.firebaseapp.com",
-    projectId: "microdz-login",
-    appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+  apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+  authDomain: "microdz-login.firebaseapp.com",
+  databaseURL: "https://microdz-login-default-rtdb.firebaseio.com",
+  projectId: "microdz-login",
+  appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
 };
 
-const app = initializeApp(firebaseConfig);
+/* ================= INIT ================= */
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db   = getDatabase(app);
 
 const table = document.getElementById("userTable");
+const logoutBtn = document.getElementById("logoutBtn");
 
+/* ================= LOGOUT ================= */
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+  window.location.href = "index.html";
+});
+
+/* ================= AUTH CHECK ================= */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    alert("Silakan login sebagai admin");
     window.location.href = "index.html";
     return;
   }
 
-  const snap = await getDocs(collection(db, "users"));
-
-  if (snap.empty) {
-    table.innerHTML = `<tr><td colspan="4" class="p-4 text-center">Tidak ada data user</td></tr>`;
-    return;
-  }
-
-  snap.forEach(doc => {
-    const d = doc.data();
-    table.innerHTML += `
-      <tr class="border-t">
-        <td class="p-2">${doc.id}</td>
-        <td class="p-2">${d.email}</td>
-        <td class="p-2">${d.role}</td>
-        <td class="p-2">${d.createdAt?.toDate().toLocaleString() || "-"}</td>
-      </tr>
-    `;
-  });
+  loadUsers();
 });
+
+/* ================= LOAD USERS ================= */
+async function loadUsers() {
+  table.innerHTML = "";
+
+  try {
+    const snapshot = await get(ref(db, "users"));
+
+    if (!snapshot.exists()) {
+      table.innerHTML = `
+        <tr>
+          <td colspan="4" class="p-4 text-center text-gray-500">
+            Tidak ada data user
+          </td>
+        </tr>`;
+      return;
+    }
+
+    const users = snapshot.val();
+
+    Object.keys(users).forEach(uid => {
+      const u = users[uid];
+
+      table.innerHTML += `
+        <tr class="border-t hover:bg-gray-50">
+          <td class="p-2 text-sm">${uid}</td>
+          <td class="p-2">${u.email || "-"}</td>
+          <td class="p-2">${u.role || "-"}</td>
+          <td class="p-2">
+            ${u.createdAt ? new Date(u.createdAt).toLocaleString() : "-"}
+          </td>
+        </tr>
+      `;
+    });
+
+  } catch (err) {
+    console.error(err);
+    table.innerHTML = `
+      <tr>
+        <td colspan="4" class="p-4 text-center text-red-600">
+          Gagal mengambil data user
+        </td>
+      </tr>`;
+  }
+}
 </script>
 
 </body>
