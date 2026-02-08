@@ -1,136 +1,104 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard User MicroDZ</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <title>User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
 
-<body class="bg-gray-100 min-h-screen flex flex-col">
+  <div class="bg-white w-full max-w-md p-6 rounded-xl shadow">
+    <h1 class="text-2xl font-bold mb-2 text-center">Dashboard User</h1>
+    <p id="userName" class="text-center text-gray-600 mb-6"></p>
 
-<!-- HEADER -->
-<header class="bg-white border-b shadow-sm">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-        <div>
-            <h1 class="text-xl font-semibold text-gray-800">MicroDZ User Dashboard</h1>
-            <p class="text-xs text-gray-500">Ringkasan akun dan akses Anda</p>
-        </div>
-        <button id="logoutBtn"
-            class="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
-            Logout
-        </button>
-    </div>
-</header>
+    <button
+      id="monitoringBtn"
+      class="w-full bg-green-600 text-white py-3 rounded mb-4 disabled:opacity-50"
+      disabled>
+      Monitoring Perangkat
+    </button>
 
-<!-- MAIN -->
-<main class="flex-grow max-w-5xl mx-auto px-4 py-6">
+    <button
+      id="reportBtn"
+      class="w-full bg-indigo-600 text-white py-3 rounded disabled:opacity-50"
+      disabled>
+      Laporan
+    </button>
 
-    <!-- USER INFO -->
-    <div class="bg-white rounded shadow p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-2">Informasi Akun</h2>
-        <p class="text-gray-700">Email: <span id="userEmail" class="font-medium text-blue-600">-</span></p>
-        <p class="text-gray-700 mt-1">Role: <span id="roleInfo" class="font-semibold">User</span></p>
-    </div>
+    <button
+      id="logoutBtn"
+      class="w-full mt-6 text-sm text-red-500 underline">
+      Logout
+    </button>
+  </div>
 
-    <!-- CLIENT ACCESS SECTION (Hanya muncul jika ada link dari admin) -->
-    <div id="clientLinkSection" class="bg-white rounded shadow p-6 mb-6 hidden">
-        <h3 class="font-semibold text-gray-800 mb-2">Akses Khusus Anda</h3>
-        <p class="text-sm text-gray-500 mb-4">Pilih tombol di bawah untuk membuka link yang telah disediakan admin.</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a id="monitoringBtn" href="#" target="_blank"
-               class="block text-center bg-blue-600 text-white font-semibold py-3 rounded-lg shadow hover:bg-blue-700 transition-colors">
-                Monitoring Perangkat
-            </a>
-            <a id="reportBtn" href="#" target="_blank"
-               class="block text-center bg-emerald-600 text-white font-semibold py-3 rounded-lg shadow hover:bg-emerald-700 transition-colors">
-                Data & Laporan
-            </a>
-            <a id="settingsBtn" href="#" target="_blank"
-               class="block text-center bg-slate-600 text-white font-semibold py-3 rounded-lg shadow hover:bg-slate-700 transition-colors">
-                Pengaturan Akun
-            </a>
-        </div>
-    </div>
+  <!-- FIREBASE SCRIPT -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    <div id="emptyState" class="bg-white rounded shadow p-6 text-center text-gray-500">
-        Link akses Anda belum tersedia. Silakan tunggu admin menambahkan link untuk akun ini.
-    </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+      authDomain: "microdz-login.firebaseapp.com",
+      projectId: "microdz-login",
+      appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+    };
 
-</main>
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-<footer class="text-center text-xs text-gray-500 py-4">
-    © 2025 MicroDZ
-</footer>
+    const monitoringBtn = document.getElementById("monitoringBtn");
+    const reportBtn = document.getElementById("reportBtn");
+    const userNameEl = document.getElementById("userName");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-    authDomain: "microdz-login.firebaseapp.com",
-    projectId: "microdz-login",
-    appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const appId = "microdz-app-1"; // ID unik untuk identifikasi data aplikasi Anda
-
-onAuthStateChanged(auth, (user) => {
-    if (!user) {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
         window.location.href = "index.html";
         return;
-    }
+      }
 
-    if (user.email === "admin.microdz@gmail.com") {
-        window.location.href = "admin-dashboard.html";
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+
+      if (!snap.exists()) {
+        alert("Data user tidak ditemukan");
         return;
-    }
+      }
 
-    const email = user.email;
-    document.getElementById("userEmail").innerText = email;
+      const data = snap.data();
 
-    const docId = email.replace(/\./g, "-");
-    const linkDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'clientLinks', docId);
+      // Pastikan hanya role user
+      if (data.role !== "user") {
+        alert("Akses ditolak");
+        return;
+      }
 
-    onSnapshot(linkDocRef, (docSnap) => {
-        const section = document.getElementById("clientLinkSection");
-        const emptyState = document.getElementById("emptyState");
-        const monitoringBtn = document.getElementById("monitoringBtn");
-        const reportBtn = document.getElementById("reportBtn");
-        const settingsBtn = document.getElementById("settingsBtn");
+      userNameEl.textContent = `Halo, ${data.name ?? "User"}`;
 
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const hasLinks = Boolean(data.monitoringUrl || data.reportUrl || data.settingsUrl);
+      if (data.monitoringUrl) {
+        monitoringBtn.disabled = false;
+        monitoringBtn.onclick = () => {
+          window.location.href = data.monitoringUrl;
+        };
+      }
 
-            monitoringBtn.href = data.monitoringUrl ?? "#";
-            reportBtn.href = data.reportUrl ?? "#";
-            settingsBtn.href = data.settingsUrl ?? "pengaturan-akun.html";
-
-            section.classList.toggle("hidden", !hasLinks);
-            emptyState.classList.toggle("hidden", hasLinks);
-        } else {
-            section.classList.add("hidden");
-            emptyState.classList.remove("hidden");
-        }
-    }, (error) => {
-        console.error("Gagal memuat link klien:", error);
+      if (data.reportUrl) {
+        reportBtn.disabled = false;
+        reportBtn.onclick = () => {
+          window.location.href = data.reportUrl;
+        };
+      }
     });
-});
 
-// LOGOUT
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    signOut(auth).then(() => {
-        window.location.href = "index.html";
-    });
-});
-</script>
+    logoutBtn.onclick = async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    };
+  </script>
 
 </body>
 </html>
