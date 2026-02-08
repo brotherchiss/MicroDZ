@@ -2,35 +2,87 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard MicroDZ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
 
-<h1>Dashboard</h1>
-<p>Anda berhasil login.</p>
+<body class="bg-gray-100 min-h-screen flex flex-col">
 
+    <!-- HEADER -->
+    <header class="bg-white border-b shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-semibold text-gray-800">MicroDZ Dashboard</h1>
+            <button id="logoutBtn"
+                class="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow max-w-5xl mx-auto px-4 py-6">
+        <div class="bg-white rounded shadow p-6">
+            <h2 class="text-lg font-semibold mb-2">Selamat datang</h2>
+            <p class="text-gray-700 mb-4">
+                Anda login sebagai:
+                <span id="userEmail" class="font-medium text-blue-600">-</span>
+            </p>
+
+            <hr class="my-4">
+
+            <h3 class="font-semibold mb-2">Menu</h3>
+            <ul class="list-disc list-inside text-gray-700">
+                <li>Monitoring perangkat</li>
+                <li>Kontrol sistem</li>
+                <li>Data & laporan</li>
+                <li>Pengaturan akun</li>
+            </ul>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="text-center text-xs text-gray-500 py-4">
+        © 2025 MicroDZ
+    </footer>
+
+    <!-- FIREBASE SCRIPT -->
     <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-  authDomain: "microdz-login.firebaseapp.com",
-  projectId: "microdz-login",
-  appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+            authDomain: "microdz-login.firebaseapp.com",
+            projectId: "microdz-login",
+            appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+        };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    // BELUM LOGIN → kembalikan ke halaman login
-    window.location.href = "index.html";
-  }
-});
-</script>
+        // CEK LOGIN
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // BELUM LOGIN → KEMBALI KE LOGIN
+                window.location.href = "index.html";
+            } else {
+                // SUDAH LOGIN → TAMPILKAN EMAIL
+                document.getElementById("userEmail").innerText = user.email;
+            }
+        });
 
+        // LOGOUT
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            signOut(auth).then(() => {
+                window.location.href = "index.html";
+            });
+        });
+    </script>
 
 </body>
 </html>
