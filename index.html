@@ -137,8 +137,11 @@
             else viewTitle.innerText = 'Atur ulang kata sandi';
         }
 
-        function handleLogin(e) {
+                function handleLogin(e) {
             e.preventDefault();
+            const email = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            loginFirebase(email, password);
             const alert = document.getElementById('alertBox');
             alert.classList.remove('hidden');
             alert.innerText = "Mencoba masuk ke akun MicroDZ...";
@@ -159,5 +162,34 @@
             showView('loginView');
         }
     </script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+  authDomain: "microdz-login.firebaseapp.com",
+  projectId: "microdz-login",
+  storageBucket: "microdz-login.firebasestorage.app",
+  messagingSenderId: "407509494952",
+  appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.loginFirebase = function(email, password) {
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      alert("Login berhasil");
+    })
+    .catch(() => {
+      alert("Email atau password salah");
+    });
+}
+</script>
+
+    
 </body>
 </html>
