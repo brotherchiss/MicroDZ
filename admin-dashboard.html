@@ -1,400 +1,334 @@
 <!DOCTYPE html>
-
 <html lang="id">
-
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MicroDZ | Admin Control</title>
 
-  <meta charset="UTF-8" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
-  <title>Admin Dashboard</title>
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-green: #39ff14;
+            --neon-red: #ff3131;
+            --dark-bg: #0a0b10;
+            --panel-bg: rgba(16, 18, 27, 0.9);
+            --border-color: rgba(0, 243, 255, 0.2);
+        }
 
-  <script src="https://cdn.tailwindcss.com"></script>
+        body {
+            background-color: var(--dark-bg);
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', monospace;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 2px 2px, rgba(0, 243, 255, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
 
+        .cyber-header {
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        /* Decorative Corners */
+        .corner-accent {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-color: var(--neon-blue);
+            border-style: solid;
+        }
+        .top-left { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+        .top-right { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+        .bottom-left { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+        .bottom-right { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+        .cyber-table thead {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .cyber-table tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+
+        .cyber-table tr:hover {
+            background: rgba(0, 243, 255, 0.03);
+            box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.05);
+        }
+
+        .input-tech {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            color: white;
+            font-size: 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .input-tech:focus {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
+            outline: none;
+        }
+
+        .btn-action {
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .btn-save { border-color: var(--neon-green); color: var(--neon-green); }
+        .btn-save:hover { background: var(--neon-green); color: black; box-shadow: 0 0 15px var(--neon-green); }
+
+        .btn-logout { border-color: var(--neon-red); color: var(--neon-red); }
+        .btn-logout:hover { background: var(--neon-red); color: white; box-shadow: 0 0 15px var(--neon-red); }
+
+        .status-msg {
+            font-size: 0.75rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Scanline Effect */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            z-index: 999;
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+    </style>
 </head>
 
+<body class="p-6">
 
+    <div class="max-w-6xl mx-auto relative z-10">
+        
+        <!-- HEADER -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <div>
+                <h1 class="cyber-header text-2xl font-bold text-white tracking-widest">ADMIN_CENTRAL_v2.5</h1>
+                <p class="text-[10px] text-cyan-500 font-bold uppercase tracking-[0.3em]">Microcontroller User Management</p>
+            </div>
+            <button id="logoutBtn" class="btn-action btn-logout px-6 py-2 rounded">
+                TERMINATE_SESSION
+            </button>
+        </header>
 
-<body class="bg-gray-100 min-h-screen p-6">
+        <!-- STATUS INDICATOR -->
+        <div id="status" class="mb-6 p-3 bg-cyan-900/10 border-l-2 border-cyan-500 text-cyan-400 status-msg uppercase tracking-tighter">
+            System Initializing...
+        </div>
 
+        <!-- TABLE SECTION -->
+        <div class="glass-panel rounded shadow-2xl relative overflow-hidden">
+            <div class="corner-accent top-left"></div>
+            <div class="corner-accent top-right"></div>
+            <div class="corner-accent bottom-left"></div>
+            <div class="corner-accent bottom-right"></div>
 
+            <div class="overflow-x-auto">
+                <table class="w-full cyber-table">
+                    <thead>
+                        <tr>
+                            <th class="p-4 text-left">Network_ID (Email)</th>
+                            <th class="p-4 text-left w-1/4">Monitoring_Link</th>
+                            <th class="p-4 text-left w-1/4">Report_Link</th>
+                            <th class="p-4 text-center">Protocol_Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTable">
+                        <tr>
+                            <td colspan="4" class="p-10 text-center text-cyan-500/50 italic text-sm">
+                                [ SCANNING_FOR_USER_NODES... ]
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-  <!-- HEADER -->
+        <footer class="mt-8 text-center">
+            <p class="text-[9px] text-gray-600 tracking-[0.5em] uppercase">Security Encryption: ACTIVE // Port: 443</p>
+        </footer>
+    </div>
 
-  <div class="flex justify-between items-center mb-6">
-
-    <h1 class="text-2xl font-bold">Dashboard Admin – Manajemen User</h1>
-
-    <button id="logoutBtn"
-
-      class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-
-      Logout
-
-    </button>
-
-  </div>
-
-
-
-  <!-- STATUS -->
-
-  <div id="status" class="mb-4 text-gray-600 font-medium">
-
-    Memeriksa autentikasi...
-
-  </div>
-
-
-
-  <!-- TABLE -->
-
-  <div class="overflow-x-auto">
-
-    <table class="w-full bg-white shadow rounded">
-
-      <thead class="bg-gray-200">
-
-        <tr>
-
-          <th class="p-2 text-left">Email</th>
-
-          <th class="p-2 text-left">Link Monitoring</th>
-
-          <th class="p-2 text-left">Link Laporan</th>
-
-          <th class="p-2 text-left">Aksi</th>
-
-        </tr>
-
-      </thead>
-
-      <tbody id="userTable">
-
-        <tr>
-
-          <td colspan="4" class="p-4 text-center text-gray-500">
-
-            Memuat data...
-
-          </td>
-
-        </tr>
-
-      </tbody>
-
-    </table>
-
-  </div>
-
-
-
-<!-- ================= SCRIPT ================= -->
-
+<!-- ================= SCRIPT (Logika Anda Tidak Berubah) ================= -->
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-
-import { getAuth, onAuthStateChanged, signOut } 
-
-  from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
-
   getFirestore,
-
   collection,
-
   query,
-
   where,
-
   getDocs,
-
   doc,
-
   getDoc,
-
   setDoc,
-
   serverTimestamp
-
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-
-
-/* ===== FIREBASE CONFIG ===== */
-
 const firebaseConfig = {
-
   apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-
   authDomain: "microdz-login.firebaseapp.com",
-
   projectId: "microdz-login",
-
   appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-
 };
 
-
-
-/* ===== INIT ===== */
-
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getFirestore(app);
 
-
-
 const table  = document.getElementById("userTable");
-
 const status = document.getElementById("status");
-
 const logoutBtn = document.getElementById("logoutBtn");
 
-
-
-/* ===== LOGOUT ===== */
-
 logoutBtn.addEventListener("click", async () => {
-
+  status.innerText = "> TERMINATING_SESSION...";
   await signOut(auth);
-
   location.href = "index.html";
-
 });
 
-
-
-/* ===== AUTH + ROLE CHECK ===== */
-
 onAuthStateChanged(auth, async (user) => {
-
   if (!user) {
-
     location.href = "index.html";
-
     return;
-
   }
 
-
-
-  status.innerText = "Memverifikasi hak akses admin...";
-
-
+  status.innerText = "> VERIFYING_ADMIN_CREDENTIALS...";
 
   const meSnap = await getDoc(doc(db, "users", user.uid));
 
-
-
   if (!meSnap.exists() || meSnap.data().role !== "admin") {
-
-    alert("Akses ditolak. Anda bukan admin.");
-
+    alert("CRITICAL_ERROR: Access Denied. Admin Privilege Required.");
     location.href = "index.html";
-
     return;
-
   }
 
-
-
   status.remove();
-
   loadUsers();
-
 });
 
-
-
-/* ===== LOAD USERS (ROLE = user) ===== */
-
 async function loadUsers() {
-
   table.innerHTML = "";
 
-
-
   try {
-
     const q = query(
-
       collection(db, "users"),
-
       where("role", "==", "user")
-
     );
-
-
 
     const snap = await getDocs(q);
 
-
-
     if (snap.empty) {
-
       table.innerHTML = `
-
         <tr>
-
-          <td colspan="4" class="p-4 text-center text-gray-500">
-
-            Tidak ada user
-
+          <td colspan="4" class="p-10 text-center text-gray-600 italic">
+            [ NO_ACTIVE_USER_NODES_FOUND ]
           </td>
-
         </tr>`;
-
       return;
-
     }
-
-
 
     for (const d of snap.docs) {
-
       const u = d.data();
-
       const uid = d.id;
 
-
-
       const linkSnap = await getDoc(doc(db, "userLinks", uid));
-
       const links = linkSnap.exists() ? linkSnap.data() : {};
 
-
-
       table.innerHTML += `
+        <tr class="hover:bg-cyan-500/5">
+          <td class="p-4">
+             <div class="text-white font-bold">${u.email || "-"}</div>
+             <div class="text-[9px] text-cyan-600">UID: ${uid.substring(0,8)}...</div>
+          </td>
 
-        <tr class="border-t hover:bg-gray-50">
-
-          <td class="p-2 text-sm">${u.email || "-"}</td>
-
-
-
-          <td class="p-2">
-
+          <td class="p-4">
             <input
-
               id="mon-${uid}"
-
               value="${links.monitoringUrl || ""}"
-
-              placeholder="https://monitoring..."
-
-              class="border p-1 w-full text-sm rounded"
-
+              placeholder="Stream Source URL..."
+              class="input-tech w-full px-3 py-2 rounded"
             />
-
           </td>
 
-
-
-          <td class="p-2">
-
+          <td class="p-4">
             <input
-
               id="rep-${uid}"
-
               value="${links.reportUrl || ""}"
-
-              placeholder="https://laporan..."
-
-              class="border p-1 w-full text-sm rounded"
-
+              placeholder="Data Log URL..."
+              class="input-tech w-full px-3 py-2 rounded"
             />
-
           </td>
 
-
-
-          <td class="p-2">
-
+          <td class="p-4 text-center">
             <button
-
               onclick="saveLink('${uid}')"
-
-              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
-
-              Simpan
-
+              class="btn-action btn-save px-4 py-2 rounded">
+              SYNC_NODE
             </button>
-
           </td>
-
         </tr>
-
       `;
-
     }
 
-
-
   } catch (err) {
-
     console.error(err);
-
     table.innerHTML = `
-
       <tr>
-
-        <td colspan="4" class="p-4 text-center text-red-600">
-
-          Gagal memuat data user
-
+        <td colspan="4" class="p-10 text-center text-red-500 font-bold">
+          [ DATA_FETCH_FAILURE_0x505 ]
         </td>
-
       </tr>`;
-
   }
-
 }
 
-
-
-/* ===== SAVE LINK PER USER ===== */
-
 window.saveLink = async (uid) => {
-
   const monitoringUrl = document.getElementById(`mon-${uid}`).value.trim();
-
   const reportUrl     = document.getElementById(`rep-${uid}`).value.trim();
 
-
-
-  await setDoc(
-
-    doc(db, "userLinks", uid),
-
-    {
-
-      monitoringUrl,
-
-      reportUrl,
-
-      updatedAt: serverTimestamp()
-
-    },
-
-    { merge: true }
-
-  );
-
-
-
-  alert("Link berhasil disimpan");
-
+  try {
+      await setDoc(
+        doc(db, "userLinks", uid),
+        {
+          monitoringUrl,
+          reportUrl,
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+      alert("SUCCESS: Node Link Synchronized");
+  } catch (e) {
+      alert("ERROR: Failed to update node");
+  }
 };
-
 </script>
 
-
-
 </body>
-
 </html>
-
