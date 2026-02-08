@@ -203,7 +203,7 @@
                 return;
             }
 
-            welcomeMsg.textContent = `AUTHENTICATED: ${user.email}`;
+            welcomeMsg.textContent = `${user.email}`;
 
             try {
                 const snap = await getDoc(doc(db, "userLinks", user.uid));
