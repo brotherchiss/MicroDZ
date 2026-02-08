@@ -1,104 +1,189 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MicroDZ Login</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroDZ Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f6f8fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+        .microdz-card {
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+        }
+        .btn-green {
+            background-color: #2da44e;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-green:hover {
+            background-color: #2c974b;
+        }
+        .btn-blue {
+            background-color: #0969da;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-blue:hover {
+            background-color: #0860ca;
+        }
+        .input-field {
+            border: 1px solid #d0d7de;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-field:focus {
+            border-color: #0969da;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <!-- Judul Aplikasi -->
+    <h1 class="text-3xl font-bold mb-8 text-gray-800 tracking-tight cursor-pointer" onclick="location.reload()">MicroDZ</h1>
 
-<div class="bg-white w-full max-w-sm p-6 rounded shadow">
-  <h1 class="text-2xl font-bold text-center mb-4">MicroDZ</h1>
+    <div class="w-full max-w-[340px]">
+        <!-- Pesan Status -->
+        <div id="status" class="hidden w-full p-3 mb-4 text-sm border rounded bg-red-50 border-red-200 text-red-800"></div>
 
-  <p id="status" class="text-sm text-center text-red-500 mb-3 hidden"></p>
+        <!-- Bagian LOGIN -->
+        <div id="loginSection">
+            <div class="microdz-card p-6 shadow-sm mb-4">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700">Masuk</h2>
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium mb-1" for="loginEmail">Email</label>
+                        <input id="loginEmail" type="email" placeholder="Email" class="input-field w-full px-3 py-2 rounded text-sm" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-1" for="loginPassword">Password</label>
+                        <input id="loginPassword" type="password" placeholder="Password" class="input-field w-full px-3 py-2 rounded text-sm" required>
+                    </div>
+                    <button type="submit" class="btn-green w-full py-2 rounded font-semibold text-sm">Login</button>
+                </form>
+            </div>
+            
+            <!-- Link ke Register -->
+            <div class="microdz-card p-4 text-center text-sm border-gray-300">
+                Baru di MicroDZ? <a href="#" id="showRegister" class="text-blue-600 hover:underline">Buat akun baru</a>.
+            </div>
+        </div>
 
-  <!-- LOGIN -->
-  <form id="loginForm">
-    <input id="loginEmail" type="email" placeholder="Email"
-      class="w-full mb-3 px-3 py-2 border rounded" required>
+        <!-- Bagian REGISTER (Hidden by default) -->
+        <div id="registerSection" class="hidden">
+            <div class="microdz-card p-6 shadow-sm mb-4">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700">Daftar Akun Baru</h2>
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium mb-1" for="regEmail">Email Baru</label>
+                        <input id="regEmail" type="email" placeholder="Email baru" class="input-field w-full px-3 py-2 rounded text-sm" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-1" for="regPassword">Password Baru</label>
+                        <input id="regPassword" type="password" placeholder="Password baru" class="input-field w-full px-3 py-2 rounded text-sm" required>
+                    </div>
+                    <button type="submit" class="btn-blue w-full py-2 rounded font-semibold text-sm">Daftar</button>
+                </form>
+            </div>
 
-    <input id="loginPassword" type="password" placeholder="Password"
-      class="w-full mb-3 px-3 py-2 border rounded" required>
+            <!-- Link kembali ke Login -->
+            <div class="text-center text-sm">
+                Sudah punya akun? <a href="#" id="showLogin" class="text-blue-600 hover:underline">Kembali ke Login</a>.
+            </div>
+        </div>
+    </div>
 
-    <button class="w-full bg-green-600 text-white py-2 rounded">
-      Login
-    </button>
-  </form>
+    <p class="mt-8 text-xs text-gray-500">© 2025 MicroDZ Auth System</p>
 
-  <hr class="my-4">
+    <!-- FIREBASE STRATEGY -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import {
+            getAuth,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  <!-- REGISTER -->
-  <form id="registerForm">
-    <input id="regEmail" type="email" placeholder="Email baru"
-      class="w-full mb-3 px-3 py-2 border rounded" required>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+            authDomain: "microdz-login.firebaseapp.com",
+            projectId: "microdz-login",
+            appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+        };
 
-    <input id="regPassword" type="password" placeholder="Password baru"
-      class="w-full mb-3 px-3 py-2 border rounded" required>
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        const status = document.getElementById("status");
+        const loginSection = document.getElementById("loginSection");
+        const registerSection = document.getElementById("registerSection");
 
-    <button class="w-full bg-blue-600 text-white py-2 rounded">
-      Daftar Akun
-    </button>
-  </form>
-</div>
+        // Toggle UI
+        document.getElementById("showRegister").addEventListener("click", (e) => {
+            e.preventDefault();
+            loginSection.classList.add("hidden");
+            registerSection.classList.remove("hidden");
+            status.classList.add("hidden");
+        });
 
-<!-- FIREBASE -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import {
-    getAuth,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        document.getElementById("showLogin").addEventListener("click", (e) => {
+            e.preventDefault();
+            registerSection.classList.add("hidden");
+            loginSection.classList.remove("hidden");
+            status.classList.add("hidden");
+        });
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-    authDomain: "microdz-login.firebaseapp.com",
-    projectId: "microdz-login",
-    appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-  };
+        function showStatus(message, isError = true) {
+            status.innerText = message;
+            status.className = isError 
+                ? "w-full p-3 mb-4 text-sm border rounded bg-red-50 border-red-200 text-red-800 block"
+                : "w-full p-3 mb-4 text-sm border rounded bg-green-50 border-green-200 text-green-800 block";
+        }
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const status = document.getElementById("status");
+        // PROSES LOGIN
+        document.getElementById("loginForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
 
-  // LOGIN
-  document.getElementById("loginForm").addEventListener("submit", e => {
-    e.preventDefault();
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    window.location.href = "dashboard.html";
+                })
+                .catch(err => {
+                    showStatus("Gagal masuk: " + err.message);
+                });
+        });
 
-    const email = loginEmail.value;
-    const password = loginPassword.value;
+        // PROSES REGISTER
+        document.getElementById("registerForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const email = document.getElementById("regEmail").value;
+            const password = document.getElementById("regPassword").value;
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        window.location.href = "dashboard.html";
-      })
-      .catch(err => {
-        status.innerText = err.message;
-        status.classList.remove("hidden");
-      });
-  });
-
-  // REGISTER
-  document.getElementById("registerForm").addEventListener("submit", e => {
-    e.preventDefault();
-
-    const email = regEmail.value;
-    const password = regPassword.value;
-
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        alert("Akun berhasil dibuat. Silakan login.");
-        regEmail.value = "";
-        regPassword.value = "";
-      })
-      .catch(err => {
-        status.innerText = err.message;
-        status.classList.remove("hidden");
-      });
-  });
-</script>
-
+            createUserWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    showStatus("Akun berhasil dibuat. Silakan login.", false);
+                    document.getElementById("regEmail").value = "";
+                    document.getElementById("regPassword").value = "";
+                    // Pindah ke login setelah sukses
+                    setTimeout(() => {
+                        registerSection.classList.add("hidden");
+                        loginSection.classList.remove("hidden");
+                    }, 2000);
+                })
+                .catch(err => {
+                    showStatus("Gagal daftar: " + err.message);
+                });
+        });
+    </script>
 </body>
 </html>
