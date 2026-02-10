@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitoring Suhu & Kelembaban</title>
+
+  <!-- MQTT.js -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      background: #020617;
+      padding: 30px;
+      border-radius: 12px;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .value {
+      font-size: 42px;
+      font-weight: bold;
+    }
+
+    .label {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-bottom: 15px;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 12px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>ESP8266 DHT22</h1>
+
+    <div class="label">Suhu</div>
+    <div class="value" id="temp">-- °C</div>
+
+    <div class="label">Kelembaban</div>
+    <div class="value" id="hum">-- %</div>
+
+    <div class="status" id="status">MQTT: connecting...</div>
+  </div>
+
+  <script>
+    /* ================= MQTT CONFIG ================= */
+    const brokerUrl = "wss://broker.hivemq.com:8884/mqtt";
+    const topicData = "sensor/esp8266_01/dht22";
+
+    const options = {
+      clientId: "web_" + Math.random().toString(16).substr(2, 8),
+      clean: true,
+      connectTimeout: 4000
+    };
+
+    /* ================= CONNECT ================= */
+    const client = mqtt.connect(brokerUrl, options);
+
+    const statusEl = document.getElementById("status");
+    const tempEl   = document.getElementById("temp");
+    const humEl    = document.getElementById("hum");
+
+    client.on("connect", () => {
+      statusEl.innerText = "MQTT: connected";
+      client.subscribe(topicData);
+    });
+
+    client.on("reconnect", () => {
+      statusEl.innerText = "MQTT: reconnecting...";
+    });
+
+    client.on("offline", () => {
+      statusEl.innerText = "MQTT: offline";
+    });
+
+    client.on("error", (err) => {
+      statusEl.innerText = "MQTT error";
+      console.error(err);
+    });
+
+    /* ================= RECEIVE DATA ================= */
+    client.on("message", (topic, message) => {
+      try {
+        const data = JSON.parse(message.toString());
+
+        if (data.temperature !== undefined) {
+          tempEl.innerText = data.temperature.toFixed(1) + " °C";
+        }
+
+        if (data.humidity !== undefined) {
+          humEl.innerText = data.humidity.toFixed(1) + " %";
+        }
+
+      } catch (e) {
+        console.error("Invalid JSON", e);
+      }
+    });
+  </script>
+
+</body>
+</html>
