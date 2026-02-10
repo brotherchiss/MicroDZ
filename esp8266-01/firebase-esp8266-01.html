@@ -1,119 +1,104 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>ESP8266 Realtime Monitor (Firebase)</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Riwayat 24 Jam ESP8266 DHT22</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Firebase SDK (v9 modular) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      query,
+      orderByKey,
+      startAt,
+      onValue
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        /* ================= FIREBASE CONFIG ================= */
-        const firebaseConfig = {
-            apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
-            authDomain: "microdz-login.firebaseapp.com",
-            databaseURL: "https://microdz-login-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "microdz-login",
-            appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
-        };
+    /* ============ FIREBASE CONFIG ============ */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+      authDomain: "microdz-login.firebaseapp.com",
+      databaseURL: "https://microdz-login-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "microdz-login",
+      appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
+    };
 
-        /* ================= INIT ================= */
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
 
-        const statusEl = document.getElementById("status");
-        const uidEl = document.getElementById("uid");
-        const tempEl = document.getElementById("temp");
-        const humEl = document.getElementById("hum");
-        const timeEl = document.getElementById("time");
+    const tbody  = document.getElementById("tbody");
+    const status = document.getElementById("status");
 
-        /* ================= AUTH ================= */
-        signInAnonymously(auth)
-            .then((result) => {
-                statusEl.textContent = "AUTH OK";
-                uidEl.textContent = result.user.uid;
-                listenData();
-            })
-            .catch((error) => {
-                statusEl.textContent = "AUTH ERROR";
-                console.error(error);
-            });
+    signInAnonymously(auth).then(() => {
+      status.textContent = "AUTH OK – LOAD 24 JAM TERAKHIR";
+      loadData();
+    });
 
-        /* ================= LISTEN DATA ================= */
-        function listenData() {
-            const dataRef = ref(db, "sensor/esp8266_01/dht22");
+    function loadData() {
+      const now = Date.now();
+      const last24h = now - (24 * 60 * 60 * 1000);
 
-            onValue(dataRef, (snapshot) => {
-                if (!snapshot.exists()) {
-                    statusEl.textContent = "NO DATA (PATH KOSONG)";
-                    return;
-                }
+      const dataRef = query(
+        ref(db, "sensor/esp8266_01/dht22"),
+        orderByKey(),
+        startAt(String(last24h))
+      );
 
-                const data = snapshot.val();
-                statusEl.textContent = "LIVE DATA";
+      onValue(dataRef, (snapshot) => {
+        tbody.innerHTML = "";
 
-                tempEl.textContent = data.temperature ?? "-";
-                humEl.textContent = data.humidity ?? "-";
-
-                if (data.timestamp) {
-                    const d = new Date(data.timestamp);
-                    timeEl.textContent = d.toLocaleString("id-ID");
-                } else {
-                    timeEl.textContent = "-";
-                }
-            });
+        if (!snapshot.exists()) {
+          status.textContent = "DATA 24 JAM: KOSONG";
+          return;
         }
-    </script>
+
+        snapshot.forEach(child => {
+          const d = child.val();
+          const tr = document.createElement("tr");
+
+          tr.innerHTML = `
+            <td class="px-3 py-1">${new Date(d.timestamp).toLocaleString("id-ID")}</td>
+            <td class="px-3 py-1 text-center">${d.temperature?.toFixed(1)}</td>
+            <td class="px-3 py-1 text-center">${d.humidity?.toFixed(1)}</td>
+          `;
+
+          tbody.prepend(tr);
+        });
+      });
+    }
+  </script>
 </head>
 
-<body class="bg-slate-100 min-h-screen flex items-center justify-center">
-    <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 space-y-4">
+<body class="bg-slate-900 text-slate-200 min-h-screen p-4">
+  <div class="max-w-3xl mx-auto bg-slate-800 rounded-xl p-4 shadow-lg">
+    <h1 class="text-xl font-bold mb-2 text-center">
+      Riwayat Suhu & Kelembaban (24 Jam)
+    </h1>
 
-        <h1 class="text-xl font-bold text-center">
-            ESP8266 Realtime Monitor
-        </h1>
-
-        <div class="text-sm text-center">
-            Status: <span id="status" class="font-semibold">INIT</span>
-        </div>
-
-        <div class="text-xs text-center text-gray-500 break-all">
-            UID: <span id="uid">-</span>
-        </div>
-
-        <hr>
-
-        <div class="grid grid-cols-2 gap-4 text-center">
-            <div class="bg-slate-50 p-4 rounded-lg">
-                <div class="text-sm text-gray-500">Temperature</div>
-                <div class="text-2xl font-bold">
-                    <span id="temp">-</span> °C
-                </div>
-            </div>
-
-            <div class="bg-slate-50 p-4 rounded-lg">
-                <div class="text-sm text-gray-500">Humidity</div>
-                <div class="text-2xl font-bold">
-                    <span id="hum">-</span> %
-                </div>
-            </div>
-        </div>
-
-        <div class="text-xs text-center text-gray-500">
-            Last Update:<br>
-            <span id="time">-</span>
-        </div>
-
-        <div class="text-xs text-center text-gray-400 pt-2">
-            Firebase Realtime Database
-        </div>
+    <div id="status" class="text-xs text-center mb-3 opacity-70">
+      INIT
     </div>
+
+    <div class="overflow-auto max-h-[70vh]">
+      <table class="w-full text-sm border border-slate-700">
+        <thead class="bg-slate-700 sticky top-0">
+          <tr>
+            <th class="px-3 py-2 text-left">Waktu</th>
+            <th class="px-3 py-2 text-center">Suhu (°C)</th>
+            <th class="px-3 py-2 text-center">RH (%)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
 </body>
 </html>
