@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>ESP8266 DHT22 - Firebase Monitor</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 20px;
+    }
+    h2 {
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    canvas {
+      width: 100% !important;
+      height: 400px !important;
+    }
+    .value {
+      font-size: 1.4em;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>Monitoring Suhu & Kelembaban ESP8266</h2>
+
+<div class="card">
+  <div class="value">
+    Suhu: <b><span id="temp">--</span> °C</b><br>
+    Kelembaban: <b><span id="hum">--</span> %</b>
+  </div>
+</div>
+
+<div class="card">
+  <canvas id="chart"></canvas>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from
+    "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import {
+    getDatabase,
+    ref,
+    query,
+    orderByChild,
+    startAt,
+    onValue
+  } from
+    "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  /* ================= FIREBASE CONFIG ================= */
+  const firebaseConfig = {
+    apiKey: "API_KEY_ANDA",
+    authDomain: "project-id.firebaseapp.com",
+    databaseURL: "https://project-id.firebaseio.com",
+    projectId: "project-id"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  /* ================= CHART SETUP ================= */
+  const ctx = document.getElementById("chart").getContext("2d");
+
+  const chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "Suhu (°C)",
+          data: [],
+          borderWidth: 2,
+          tension: 0.3
+        },
+        {
+          label: "Kelembaban (%)",
+          data: [],
+          borderWidth: 2,
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: {
+          title: { display: true, text: "Waktu" }
+        },
+        y: {
+          beginAtZero: false
+        }
+      }
+    }
+  });
+
+  /* ================= FIREBASE QUERY ================= */
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const cutoff = Date.now() - DAY_MS;
+
+  const dataRef = query(
+    ref(db, "sensor/esp8266_01/dht22"),
+    orderByChild("timestamp"),
+    startAt(cutoff)
+  );
+
+  onValue(dataRef, snapshot => {
+    const labels = [];
+    const tempData = [];
+    const humData = [];
+
+    let lastTemp = "--";
+    let lastHum = "--";
+
+    snapshot.forEach(child => {
+      const v = child.val();
+
+      const time = new Date(v.timestamp)
+        .toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+
+      labels.push(time);
+      tempData.push(v.temperature);
+      humData.push(v.humidity);
+
+      lastTemp = v.temperature;
+      lastHum = v.humidity;
+    });
+
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = tempData;
+    chart.data.datasets[1].data = humData;
+    chart.update();
+
+    document.getElementById("temp").textContent = lastTemp;
+    document.getElementById("hum").textContent = lastHum;
+  });
+</script>
+
+</body>
+</html>
