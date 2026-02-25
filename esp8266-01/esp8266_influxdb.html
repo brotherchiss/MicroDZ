@@ -63,41 +63,48 @@
 </div>
 
 <script>
-  // ================= MQTT CONFIG =================
-  const broker = "wss://broker.hivemq.com:8000/mqtt";
+  const broker = "wss://broker.hivemq.com:8884/mqtt";
   const topic  = "sensor/esp8266_01/dht22";
 
-  const client = mqtt.connect(broker);
+  const client = mqtt.connect(broker, {
+    clientId: "web_" + Math.random().toString(16).substr(2, 8),
+    clean: true,
+    connectTimeout: 5000,
+    reconnectPeriod: 3000
+  });
 
-  // ================= ELEMENT =================
   const statusEl = document.getElementById("status");
   const tempEl   = document.getElementById("temp");
   const humEl    = document.getElementById("hum");
   const timeEl   = document.getElementById("time");
 
-  // ================= EVENTS =================
   client.on("connect", () => {
-    statusEl.textContent = "🟢 Connected to MQTT";
+    statusEl.textContent = "🟢 MQTT Connected";
     client.subscribe(topic);
+  });
+
+  client.on("reconnect", () => {
+    statusEl.textContent = "🟡 Reconnecting...";
+  });
+
+  client.on("offline", () => {
+    statusEl.textContent = "🔴 MQTT Offline";
+  });
+
+  client.on("error", (err) => {
+    statusEl.textContent = "❌ MQTT Error";
+    console.error(err);
   });
 
   client.on("message", (topic, message) => {
     try {
       const data = JSON.parse(message.toString());
-
       tempEl.textContent = data.temperature.toFixed(1) + " °C";
       humEl.textContent  = data.humidity.toFixed(1) + " %";
-
-      const now = new Date();
-      timeEl.textContent = "Update: " + now.toLocaleString();
+      timeEl.textContent = "Update: " + new Date().toLocaleString();
     } catch (e) {
-      console.error("Invalid JSON", e);
+      console.error("JSON error", e);
     }
-  });
-
-  client.on("error", (err) => {
-    statusEl.textContent = "🔴 MQTT Error";
-    console.error(err);
   });
 </script>
 
