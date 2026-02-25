@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitoring ESP8266 DHT22</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background: #020617;
+      padding: 30px;
+      border-radius: 12px;
+      width: 340px;
+      text-align: center;
+      box-shadow: 0 0 25px rgba(0,0,0,0.6);
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .label {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-top: 15px;
+    }
+
+    .value {
+      font-size: 42px;
+      font-weight: bold;
+    }
+
+    .time {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-top: 10px;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>ESP8266 – DHT22</h1>
+
+  <div class="label">Suhu</div>
+  <div class="value" id="temp">-- °C</div>
+
+  <div class="label">Kelembaban</div>
+  <div class="value" id="hum">-- %</div>
+
+  <div class="time" id="time">--</div>
+  <div class="status" id="status">Loading...</div>
+</div>
+
+<script>
+/* ================== KONFIGURASI ================== */
+
+// GANTI SESUAI MILIK ANDA
+const INFLUX_URL =
+  "https://us-east-1-1.aws.cloud2.influxdata.com/api/v2/query/sql?org=ORG_ID_ANDA";
+
+const INFLUX_TOKEN =
+  "ISI_TOKEN_READ_ONLY_ANDA";
+
+// QUERY ANDA (TIDAK DIUBAH)
+const QUERY = `
+SELECT *
+FROM "dht22"
+WHERE
+  time >= now() - interval '1 hour'
+  AND ("humidity" IS NOT NULL OR "temperature" IS NOT NULL)
+  AND "device" IN ('esp8266_01')
+ORDER BY time DESC
+LIMIT 1
+`;
+
+/* ================== FETCH DATA ================== */
+async function loadData() {
+  const statusEl = document.getElementById("status");
+
+  try {
+    const res = await fetch(INFLUX_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Token " + INFLUX_TOKEN,
+        "Content-Type": "application/sql",
+        "Accept": "application/json"
+      },
+      body: QUERY
+    });
+
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const json = await res.json();
+
+    if (!json || !json[0]) {
+      statusEl.innerText = "Data kosong";
+      return;
+    }
+
+    const row = json[0];
+
+    document.getElementById("temp").innerText =
+      Number(row.temperature).toFixed(1) + " °C";
+
+    document.getElementById("hum").innerText =
+      Number(row.humidity).toFixed(1) + " %";
+
+    document.getElementById("time").innerText =
+      new Date(row.time).toLocaleString();
+
+    statusEl.innerText = "Online";
+
+  } catch (err) {
+    console.error(err);
+    statusEl.innerText = "Gagal ambil data";
+  }
+}
+
+/* ================== AUTO REFRESH ================== */
+loadData();
+setInterval(loadData, 15000); // 15 detik
+</script>
+
+</body>
+</html>
