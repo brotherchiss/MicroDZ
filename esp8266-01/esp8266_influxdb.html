@@ -81,7 +81,7 @@ const INFLUX_TOKEN =
   "WzHp_bqcxEKf0n_9gGpufR0f1ito0gkgE2i5FJM8YnQ6GKtJfblKKaRz8ua17ADrU-pSZuGpowsyTGSq8EnQfg==";
 
 // QUERY ANDA (TIDAK DIUBAH)
-const QUERY = `
+const QUERY = '
 SELECT *
 FROM "dht22"
 WHERE
@@ -90,7 +90,7 @@ WHERE
   AND "device" IN ('esp8266_01')
 ORDER BY time DESC
 LIMIT 1
-`;
+';
 
 /* ================== FETCH DATA ================== */
 async function loadData() {
