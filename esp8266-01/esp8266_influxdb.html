@@ -1,22 +1,69 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <title>DHT22 Dashboard</title>
+  <meta charset="UTF-8">
+  <title>DHT22 History Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    canvas { max-width: 100%; }
+  </style>
 </head>
 <body>
-  <h2>Monitoring DHT22</h2>
-  <pre id="out">Loading...</pre>
 
-  <script>
-    fetch("https://esp8266-01.wahyu-ikhsannudin.workers.dev")
-      .then(res => res.text())
-      .then(data => {
-        document.getElementById("out").textContent = data;
-      })
-      .catch(err => {
-        document.getElementById("out").textContent = "Gagal ambil data";
-      });
-  </script>
+<h2>📊 Monitoring DHT22 (Histori dari InfluxDB)</h2>
+<p id="status">Mengambil data...</p>
+
+<canvas id="chart"></canvas>
+
+<script>
+const WORKER_URL = "https://esp8266-01.wahyu-ikhsannudin.workers.dev";
+
+fetch(WORKER_URL)
+  .then(res => res.json())
+  .then(rows => {
+    const tempMap = {};
+    const humMap  = {};
+
+    rows.forEach(r => {
+      const time = new Date(r._time).toLocaleTimeString();
+      if (r._field === "temperature") tempMap[time] = r._value;
+      if (r._field === "humidity") humMap[time] = r._value;
+    });
+
+    const labels = Object.keys(tempMap);
+    const tempData = labels.map(t => tempMap[t] ?? null);
+    const humData  = labels.map(t => humMap[t] ?? null);
+
+    document.getElementById("status").innerText =
+      `Menampilkan ${labels.length} data terakhir`;
+
+    new Chart(document.getElementById("chart"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Temperature (°C)",
+            data: tempData,
+            borderColor: "red",
+            tension: 0.2
+          },
+          {
+            label: "Humidity (%)",
+            data: humData,
+            borderColor: "blue",
+            tension: 0.2
+          }
+        ]
+      }
+    });
+  })
+  .catch(err => {
+    document.getElementById("status").innerText = "Gagal ambil data";
+    console.error(err);
+  });
+</script>
+
 </body>
 </html>
