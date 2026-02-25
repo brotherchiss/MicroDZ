@@ -2,111 +2,21 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <title>ESP8266 DHT22 Dashboard</title>
-
-  <!-- MQTT.js via CDN -->
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .card {
-      background: white;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-      width: 320px;
-      text-align: center;
-    }
-    h2 {
-      margin-bottom: 8px;
-    }
-    .status {
-      font-size: 14px;
-      margin-bottom: 16px;
-    }
-    .value {
-      font-size: 32px;
-      font-weight: bold;
-      margin: 8px 0;
-    }
-    .label {
-      color: #555;
-    }
-    .time {
-      margin-top: 12px;
-      font-size: 12px;
-      color: #888;
-    }
-  </style>
+  <title>DHT22 Dashboard</title>
 </head>
-
 <body>
+  <h2>Monitoring DHT22</h2>
+  <pre id="out">Loading...</pre>
 
-<div class="card">
-  <h2>ESP8266 DHT22 dong</h2>
-  <div id="status" class="status">🔴 Connecting...</div>
-
-  <div class="label">Temperature</div>
-  <div id="temp" class="value">-- °C</div>
-
-  <div class="label">Humidity</div>
-  <div id="hum" class="value">-- %</div>
-
-  <div id="time" class="time">Waiting data...</div>
-</div>
-
-<script>
-  const broker = "wss://broker.hivemq.com:8884/mqtt";
-  const topic  = "sensor/esp8266_01/dht22";
-
-  const client = mqtt.connect(broker, {
-    clientId: "web_" + Math.random().toString(16).substr(2, 8),
-    clean: true,
-    connectTimeout: 5000,
-    reconnectPeriod: 3000
-  });
-
-  const statusEl = document.getElementById("status");
-  const tempEl   = document.getElementById("temp");
-  const humEl    = document.getElementById("hum");
-  const timeEl   = document.getElementById("time");
-
-  client.on("connect", () => {
-    statusEl.textContent = "🟢 MQTT Connected";
-    client.subscribe(topic);
-  });
-
-  client.on("reconnect", () => {
-    statusEl.textContent = "🟡 Reconnecting...";
-  });
-
-  client.on("offline", () => {
-    statusEl.textContent = "🔴 MQTT Offline";
-  });
-
-  client.on("error", (err) => {
-    statusEl.textContent = "❌ MQTT Error";
-    console.error(err);
-  });
-
-  client.on("message", (topic, message) => {
-    try {
-      const data = JSON.parse(message.toString());
-      tempEl.textContent = data.temperature.toFixed(1) + " °C";
-      humEl.textContent  = data.humidity.toFixed(1) + " %";
-      timeEl.textContent = "Update: " + new Date().toLocaleString();
-    } catch (e) {
-      console.error("JSON error", e);
-    }
-  });
-</script>
-
+  <script>
+    fetch("https://influx-proxy.NAMA-AKUN.workers.dev")
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("out").textContent = data;
+      })
+      .catch(err => {
+        document.getElementById("out").textContent = "Gagal ambil data";
+      });
+  </script>
 </body>
 </html>
