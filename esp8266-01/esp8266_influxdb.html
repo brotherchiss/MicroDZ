@@ -12,6 +12,7 @@ h1 { text-align: center; }
 .connected { color: green; }
 .disconnected { color: red; }
 #data { padding: 10px; border: 1px solid #ccc; background: #fff; text-align: center; }
+#data p { font-size: 1.2em; margin: 5px 0; }
 </style>
 </head>
 <body>
@@ -26,7 +27,7 @@ h1 { text-align: center; }
 </div>
 
 <script>
-const broker = "wss://broker.hivemq.com:8884/mqtt";
+const broker = "wss://broker.hivemq.com:8884/mqtt"; // HiveMQ WebSocket
 const topic = "sensor/esp8266_01/dht22";
 
 const client = mqtt.connect(broker, {
@@ -63,7 +64,7 @@ client.on('error', (err) => {
 client.on('message', (t, message) => {
   if(t !== topic) return;
   try {
-    const dataArr = JSON.parse(message.toString()); // NodeMCU kirim array JSON
+    const dataArr = JSON.parse(message.toString()); // NodeMCU publish array JSON
     if(dataArr.length > 0){
       const latest = dataArr[0]; // ambil data terbaru
       tempSpan.textContent = latest.temperature.toFixed(1);
