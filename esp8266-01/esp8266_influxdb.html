@@ -2,22 +2,34 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DHT22 History</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  canvas { max-width: 100%; height: 400px; }
+</style>
 </head>
 <body>
-<canvas id="chart" width="800" height="400"></canvas>
+<h2>DHT22 Sensor History (6 jam)</h2>
+<canvas id="chart"></canvas>
 
 <script>
-const influxURL = "https://us-east-1-1.aws.cloud2.influxdata.com/api/v2/query?org=MicroDZ";
+const influxQueryURL = "https://us-east-1-1.aws.cloud2.influxdata.com/api/v2/query?org=MicroDZ";
 const token = "jaM7a03Hgl-X7IsyINBjGrh-FBG2s2tVwUB0QEqurIOeVQiwqW_TNBElQVPNwvx_StJDyXLNwiPnDvm6EdYQeg==";
 
 async function fetchData() {
   const body = JSON.stringify({
-    query: 'from(bucket:"ESP8266-01") |> range(start:-6h) |> filter(fn:(r) => r._measurement=="dht22")'
+    query: `
+      from(bucket:"ESP8266-01")
+        |> range(start: -6h)
+        |> filter(fn: (r) => r._measurement=="dht22")
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+        |> keep(columns: ["_time","temperature","humidity"])
+    `
   });
 
-  const res = await fetch(influxURL, {
+  const res = await fetch(influxQueryURL, {
     method: "POST",
     headers: {
       "Authorization": "Token " + token,
@@ -25,22 +37,27 @@ async function fetchData() {
     },
     body: body
   });
+
   const data = await res.json();
   return data;
 }
 
 function parseData(data) {
-  // sesuaikan parsing JSON dari InfluxDB v3
+  const labels = [];
   const temperature = [];
   const humidity = [];
-  const labels = [];
-  data.results[0].series.forEach(s => {
-    s.values.forEach(v => {
-      labels.push(new Date(v[0]*1000).toLocaleTimeString());
-      if (v[1] === "temperature") temperature.push(v[2]);
-      if (v[1] === "humidity") humidity.push(v[2]);
+
+  // InfluxDB v3 query response parsing
+  if(data && data.results && data.results[0].tables) {
+    const table = data.results[0].tables[0];
+    table.records.forEach(rec => {
+      const time = new Date(rec._time).toLocaleTimeString();
+      labels.push(time);
+      temperature.push(rec.temperature);
+      humidity.push(rec.humidity);
     });
-  });
+  }
+
   return { labels, temperature, humidity };
 }
 
@@ -58,10 +75,17 @@ async function drawChart() {
         { label: 'Humidity (%)', data: humidity, borderColor: 'blue', fill: false }
       ]
     },
-    options: { responsive: true }
+    options: {
+      responsive: true,
+      scales: {
+        x: { display: true, title: { display: true, text: 'Time' } },
+        y: { display: true, title: { display: true, text: 'Value' } }
+      }
+    }
   });
 }
 
+// Run chart
 drawChart();
 </script>
 </body>
