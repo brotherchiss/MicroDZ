@@ -3,49 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ESP8266 DHT22 Monitor</title>
+<title>ESP8266 DHT22 History</title>
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
 body { font-family: Arial; margin: 20px; background: #f6f8fa; }
 h1 { text-align: center; }
-#latest, #history { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #fff; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 8px; text-align: center; border: 1px solid #ccc; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
 th { background-color: #eee; }
 </style>
 </head>
 <body>
 
-<h1>Monitor ESP8266 DHT22</h1>
+<h1>History 10 Data Terakhir DHT22</h1>
 
-<div id="latest">
-<h2>Data Terbaru</h2>
-<p>Suhu: <span id="temp">-</span> °C</p>
-<p>Kelembaban: <span id="hum">-</span> %</p>
-<p>Waktu: <span id="time">-</span></p>
-</div>
-
-<div id="history">
-<h2>History 10 Data Terakhir</h2>
 <table>
 <thead>
-<tr><th>No</th><th>Waktu</th><th>Suhu (°C)</th><th>Kelembaban (%)</th></tr>
+<tr>
+<th>No</th>
+<th>Suhu (°C)</th>
+<th>Kelembaban (%)</th>
+</tr>
 </thead>
 <tbody id="historyBody"></tbody>
 </table>
-</div>
 
 <script>
 const broker = "wss://broker.hivemq.com:8884/mqtt";
 const topic = "sensor/esp8266_01/dht22";
-const client = mqtt.connect(broker, { clean: true, connectTimeout: 4000, reconnectPeriod: 1000 });
+
+const client = mqtt.connect(broker, {
+  clean: true,
+  connectTimeout: 4000,
+  reconnectPeriod: 1000
+});
 
 let history = [];
-const interval = 5; // interval NodeMCU 5 detik
-
-function formatTime(date) {
-  return date.toTimeString().split(' ')[0]; // HH:MM:SS
-}
 
 client.on('connect', () => {
   console.log("MQTT connected");
@@ -57,33 +50,24 @@ client.on('connect', () => {
 client.on('message', (t, message) => {
   if(t !== topic) return;
   try {
-    history = JSON.parse(message.toString()); // JSON array
-    const now = new Date();
+    history = JSON.parse(message.toString()); // array JSON 10 data terakhir
 
-    // Update latest
-    const latest = history[history.length - 1];
-    document.getElementById('temp').textContent = latest.temperature.toFixed(1);
-    document.getElementById('hum').textContent = latest.humidity.toFixed(1);
-    document.getElementById('time').textContent = formatTime(now);
-
-    // Update tabel history dengan waktu reverse 5 detik per data
+    // Tampilkan di tabel
     const tbody = document.getElementById('historyBody');
     tbody.innerHTML = "";
-    for(let i=0;i<history.length;i++){
-      const d = history[i];
-      let time = new Date(now.getTime() - (history.length - 1 - i) * interval * 1000);
+    history.forEach((d,i)=>{
       tbody.innerHTML += `<tr>
         <td>${i+1}</td>
-        <td>${formatTime(time)}</td>
         <td>${d.temperature.toFixed(1)}</td>
         <td>${d.humidity.toFixed(1)}</td>
       </tr>`;
-    }
+    });
 
   } catch(e){
     console.error("Error parsing JSON:", e);
   }
 });
 </script>
+
 </body>
 </html>
