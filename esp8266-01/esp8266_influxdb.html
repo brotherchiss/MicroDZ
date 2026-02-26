@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ESP8266 DHT22 History</title>
+<title>ESP8266 DHT22 Monitor dengan Waktu</title>
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
 body { font-family: Arial; margin: 20px; background: #f6f8fa; }
@@ -15,12 +15,12 @@ th { background-color: #eee; }
 </head>
 <body>
 
-<h1>History 10 Data Terakhir DHT22</h1>
+<h1>ESP8266 DHT22 Monitor</h1>
 
 <table>
 <thead>
 <tr>
-<th>No</th>
+<th>Waktu</th>
 <th>Suhu (°C)</th>
 <th>Kelembaban (%)</th>
 </tr>
@@ -29,35 +29,48 @@ th { background-color: #eee; }
 </table>
 
 <script>
+// MQTT setup
 const broker = "wss://broker.hivemq.com:8884/mqtt";
 const topic = "sensor/esp8266_01/dht22";
+const client = mqtt.connect(broker, { clean:true, connectTimeout:4000, reconnectPeriod:1000 });
 
-const client = mqtt.connect(broker, {
-  clean: true,
-  connectTimeout: 4000,
-  reconnectPeriod: 1000
-});
-
+// Simpan 10 data terakhir
 let history = [];
+
+function formatTime(date){
+  return date.toTimeString().split(' ')[0]; // HH:MM:SS
+}
 
 client.on('connect', () => {
   console.log("MQTT connected");
-  client.subscribe(topic, (err) => {
+  client.subscribe(topic, (err)=>{
     if(!err) console.log("Subscribed to topic:", topic);
   });
 });
 
-client.on('message', (t, message) => {
+client.on('message', (t, message)=>{
   if(t !== topic) return;
-  try {
-    history = JSON.parse(message.toString()); // array JSON 10 data terakhir
+  try{
+    const dataArr = JSON.parse(message.toString()); // array JSON dari NodeMCU
+    const now = new Date();
+    
+    // update history, ambil maksimal 10 data terakhir
+    dataArr.forEach(d => {
+      history.push({
+        time: formatTime(now), // waktu browser saat data diterima
+        temperature: d.temperature,
+        humidity: d.humidity
+      });
+    });
 
-    // Tampilkan di tabel
+    if(history.length > 10) history = history.slice(-10); // simpan 10 data terakhir
+
+    // update tabel
     const tbody = document.getElementById('historyBody');
     tbody.innerHTML = "";
-    history.forEach((d,i)=>{
+    history.forEach(d=>{
       tbody.innerHTML += `<tr>
-        <td>${i+1}</td>
+        <td>${d.time}</td>
         <td>${d.temperature.toFixed(1)}</td>
         <td>${d.humidity.toFixed(1)}</td>
       </tr>`;
