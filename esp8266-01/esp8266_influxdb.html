@@ -56,20 +56,15 @@ let history = [];
 client.on('message', (t, message) => {
   if(t !== topic) return;
   try {
-    const dataObj = JSON.parse(message.toString());
-    history = []; // reset
-    for(let key in dataObj){
-      if(dataObj.hasOwnProperty(key)){
-        history.push(dataObj[key]);
-      }
-    }
+    const dataArr = JSON.parse(message.toString()); // array JSON
+    history = dataArr;
 
     // Update latest
     const latest = history[history.length - 1];
     document.getElementById('temp').textContent = latest.temperature.toFixed(1);
     document.getElementById('hum').textContent = latest.humidity.toFixed(1);
 
-    // Update tabel
+    // Update tabel history
     const tbody = document.getElementById('historyBody');
     tbody.innerHTML = "";
     history.forEach((d,i)=>{
