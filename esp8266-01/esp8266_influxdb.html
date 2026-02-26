@@ -24,8 +24,6 @@ async function fetchData() {
       from(bucket:"ESP8266-01")
         |> range(start: -6h)
         |> filter(fn: (r) => r._measurement=="dht22")
-        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-        |> keep(columns: ["_time","temperature","humidity"])
     `
   });
 
@@ -47,14 +45,19 @@ function parseData(data) {
   const temperature = [];
   const humidity = [];
 
-  // InfluxDB v3 query response parsing
-  if(data && data.results && data.results[0].tables) {
-    const table = data.results[0].tables[0];
-    table.records.forEach(rec => {
-      const time = new Date(rec._time).toLocaleTimeString();
-      labels.push(time);
-      temperature.push(rec.temperature);
-      humidity.push(rec.humidity);
+  if (data && data.results && data.results[0].tables) {
+    data.results[0].tables.forEach(table => {
+      table.records.forEach(r => {
+        const time = new Date(r._time).toLocaleTimeString();
+        labels.push(time);
+        if (r._field === "temperature") {
+          temperature.push(r._value);
+          humidity.push(null);  // placeholder supaya index sama
+        } else if (r._field === "humidity") {
+          humidity.push(r._value);
+          temperature.push(null); // placeholder supaya index sama
+        }
+      });
     });
   }
 
