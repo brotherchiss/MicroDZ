@@ -1,58 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>DHT22 History via Worker</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>body{font-family:Arial,sans-serif;margin:20px}canvas{max-width:100%;height:400px}</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP8266 DHT22 Monitor</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f6f8fa; }
+    h1 { text-align: center; }
+    #latest { margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; text-align: center; border: 1px solid #ccc; }
+    th { background-color: #eee; }
+  </style>
 </head>
 <body>
-<h2>DHT22 History (6 jam) via Worker</h2>
-<canvas id="chart"></canvas>
+
+<h1>Monitor ESP8266 DHT22</h1>
+
+<div id="latest">
+  <h2>Data Terbaru</h2>
+  <p>Suhu: <span id="temp">-</span> °C</p>
+  <p>Kelembaban: <span id="hum">-</span> %</p>
+</div>
+
+<div id="history">
+  <h2>History 10 Data Terakhir</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Suhu (°C)</th>
+        <th>Kelembaban (%)</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody">
+      <!-- Data akan diisi JS -->
+    </tbody>
+  </table>
+</div>
 
 <script>
-const workerURL = "https://esp8266-01.wahyu-ikhsannudin.workers.dev"; // ganti sesuai URL Worker
+  // ===== Konfigurasi MQTT =====
+  const broker = "wss://broker.hivemq.com:8000/mqtt"; // WebSocket HiveMQ
+  const topic = "sensor/esp8266_01/dht22";
 
-async function fetchHistory() {
-  const res = await fetch(workerURL);
-  const data = await res.json();
+  const client = mqtt.connect(broker);
 
-  const labels = [];
-  const temperature = [];
-  const humidity = [];
+  let history = [];
 
-  if(data.results && data.results[0].tables) {
-    data.results[0].tables.forEach(table=>{
-      table.records.forEach(r=>{
-        const time = new Date(r._time).toLocaleTimeString();
-        labels.push(time);
-        if(r._field === "temperature") temperature.push(r._value);
-        if(r._field === "humidity") humidity.push(r._value);
-      });
+  client.on('connect', () => {
+    console.log("MQTT connected");
+    client.subscribe(topic, (err) => {
+      if (!err) console.log("Subscribed to topic:", topic);
     });
-  }
-
-  return { labels, temperature, humidity };
-}
-
-async function drawChart() {
-  const { labels, temperature, humidity } = await fetchHistory();
-
-  const ctx = document.getElementById('chart').getContext('2d');
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        { label: 'Temperature (°C)', data: temperature, borderColor: 'red', fill:false },
-        { label: 'Humidity (%)', data: humidity, borderColor: 'blue', fill:false }
-      ]
-    },
-    options: { responsive:true }
   });
-}
 
-drawChart();
+  client.on('message', (t, message) => {
+    if(t === topic){
+      try {
+        const data = JSON.parse(message.toString());
+        // Update latest
+        document.getElementById('temp').textContent = data.temperature.toFixed(1);
+        document.getElementById('hum').textContent = data.humidity.toFixed(1);
+
+        // Simpan history (max 10)
+        history.push(data);
+        if(history.length > 10) history.shift();
+
+        // Tampilkan history
+        const tbody = document.getElementById('historyBody');
+        tbody.innerHTML = "";
+        history.forEach((d, i) => {
+          const row = `<tr>
+                        <td>${i+1}</td>
+                        <td>${d.temperature.toFixed(1)}</td>
+                        <td>${d.humidity.toFixed(1)}</td>
+                      </tr>`;
+          tbody.innerHTML += row;
+        });
+      } catch(e) {
+        console.error("Error parsing data:", e);
+      }
+    }
+  });
 </script>
+
 </body>
 </html>
