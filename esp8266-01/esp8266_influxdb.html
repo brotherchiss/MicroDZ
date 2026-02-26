@@ -1,230 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>MQTT Monitor Minimal</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 0 10px;
-            background: #f5f5f5;
-        }
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .led {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #f44336;
-        }
-        .led.online {
-            background: #4caf50;
-            box-shadow: 0 0 8px #4caf50;
-        }
-        button {
-            background: #2196f3;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        button:hover {
-            background: #1976d2;
-        }
-        pre {
-            background: #f0f0f0;
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-size: 12px;
-        }
-        .log {
-            height: 200px;
-            overflow-y: scroll;
-            border: 1px solid #ddd;
-            padding: 10px;
-            font-size: 12px;
-            background: #fafafa;
-        }
-        .log p {
-            margin: 2px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .info {
-            color: #2196f3;
-        }
-        .error {
-            color: #f44336;
-        }
-        .success {
-            color: #4caf50;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MQTT Connection Status</title>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<style>
+body { font-family: Arial; margin: 20px; background: #f6f8fa; }
+h1 { text-align: center; }
+#status { padding: 10px; border: 1px solid #ccc; background: #fff; text-align: center; font-weight: bold; }
+.connected { color: green; }
+.disconnected { color: red; }
+</style>
 </head>
 <body>
-    <div class="card">
-        <h2>📡 MQTT Monitor</h2>
-        <div class="status">
-            <div class="led" id="led"></div>
-            <span id="statusText">Menghubungkan...</span>
-        </div>
-        <button id="reconnectBtn">Reconnect MQTT</button>
-        <p><small>Topic: <span id="topicDisplay">sensor/esp8266_01/dht22</span></small></p>
-    </div>
 
-    <div class="card">
-        <h3>📨 Pesan Terakhir</h3>
-        <pre id="lastMessage">(belum ada)</pre>
-    </div>
+<h1>Status MQTT Broker</h1>
+<div id="status" class="disconnected">Disconnected</div>
 
-    <div class="card">
-        <h3>📋 Log</h3>
-        <div class="log" id="log"></div>
-    </div>
+<script>
+const broker = "wss://broker.hivemq.com:8884/mqtt";
+const client = mqtt.connect(broker, {
+  clean: true,
+  connectTimeout: 4000,
+  reconnectPeriod: 1000
+});
 
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-    <script>
-        // Konfigurasi
-        const MQTT_HOST = 'broker.hivemq.com';
-        const MQTT_PORT = 8000; // WebSocket
-        const MQTT_TOPIC = 'sensor/esp8266_01/dht22';
-        
-        let client = null;
-        let reconnectTimer = null;
-        let manualReconnect = false;
+const statusDiv = document.getElementById('status');
 
-        const led = document.getElementById('led');
-        const statusText = document.getElementById('statusText');
-        const lastMessageEl = document.getElementById('lastMessage');
-        const logEl = document.getElementById('log');
+client.on('connect', () => {
+  statusDiv.textContent = "Connected to MQTT Broker";
+  statusDiv.className = "connected";
+});
 
-        function addLog(message, type = 'info') {
-            const p = document.createElement('p');
-            p.className = type;
-            p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            logEl.appendChild(p);
-            logEl.scrollTop = logEl.scrollHeight;
-        }
+client.on('reconnect', () => {
+  statusDiv.textContent = "Reconnecting...";
+  statusDiv.className = "disconnected";
+});
 
-        function setStatus(connected) {
-            if (connected) {
-                led.className = 'led online';
-                statusText.textContent = 'Terhubung';
-                statusText.style.color = '#4caf50';
-                addLog('MQTT terhubung', 'success');
-            } else {
-                led.className = 'led';
-                statusText.textContent = 'Terputus';
-                statusText.style.color = '#f44336';
-                addLog('MQTT terputus', 'error');
-            }
-        }
+client.on('offline', () => {
+  statusDiv.textContent = "Offline / Disconnected";
+  statusDiv.className = "disconnected";
+});
 
-        function connectMQTT() {
-            if (client && client.connected) {
-                client.end();
-            }
+client.on('error', (err) => {
+  statusDiv.textContent = "Error: " + err.message;
+  statusDiv.className = "disconnected";
+});
+</script>
 
-            const clientId = 'webclient_' + Math.random().toString(36).substring(2, 10);
-            addLog(`Menghubungkan ke ${MQTT_HOST}:${MQTT_PORT} sebagai ${clientId}...`);
-
-            try {
-                client = mqtt.connect(`ws://${MQTT_HOST}:${MQTT_PORT}/mqtt`, {
-                    clientId: clientId,
-                    clean: true,
-                    connectTimeout: 5000,
-                    reconnectPeriod: 0, // non-aktifkan auto reconnect built-in, kita handle manual
-                });
-
-                client.on('connect', () => {
-                    setStatus(true);
-                    client.subscribe(MQTT_TOPIC, (err) => {
-                        if (err) {
-                            addLog(`Gagal subscribe: ${err}`, 'error');
-                        } else {
-                            addLog(`Subscribe ke ${MQTT_TOPIC} berhasil`, 'success');
-                        }
-                    });
-                });
-
-                client.on('message', (topic, message) => {
-                    const msgStr = message.toString();
-                    addLog(`Pesan dari ${topic}: ${msgStr}`, 'info');
-                    lastMessageEl.textContent = msgStr;
-                    
-                    // Coba parse JSON untuk validasi
-                    try {
-                        const data = JSON.parse(msgStr);
-                        lastMessageEl.textContent = JSON.stringify(data, null, 2);
-                    } catch (e) {
-                        // bukan JSON, tampilkan apa adanya
-                    }
-                });
-
-                client.on('error', (err) => {
-                    addLog(`Error: ${err.message}`, 'error');
-                    setStatus(false);
-                });
-
-                client.on('close', () => {
-                    setStatus(false);
-                    addLog('Koneksi ditutup', 'error');
-                    // Coba reconnect otomatis setelah 5 detik jika bukan manual
-                    if (!manualReconnect) {
-                        if (reconnectTimer) clearTimeout(reconnectTimer);
-                        reconnectTimer = setTimeout(() => {
-                            addLog('Mencoba reconnect otomatis...');
-                            connectMQTT();
-                        }, 5000);
-                    }
-                });
-
-            } catch (e) {
-                addLog(`Exception: ${e.message}`, 'error');
-                setStatus(false);
-            }
-        }
-
-        function disconnectMQTT() {
-            manualReconnect = true;
-            if (client) {
-                client.end(true, () => {
-                    addLog('Koneksi dihentikan manual');
-                });
-            }
-            if (reconnectTimer) {
-                clearTimeout(reconnectTimer);
-                reconnectTimer = null;
-            }
-        }
-
-        document.getElementById('reconnectBtn').addEventListener('click', () => {
-            manualReconnect = false; // biarkan auto reconnect setelahnya
-            disconnectMQTT();
-            setTimeout(() => connectMQTT(), 500);
-        });
-
-        // Mulai koneksi
-        connectMQTT();
-
-        // Tampilkan topic
-        document.getElementById('topicDisplay').textContent = MQTT_TOPIC;
-    </script>
 </body>
 </html>
