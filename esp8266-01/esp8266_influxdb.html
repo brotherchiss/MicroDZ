@@ -40,6 +40,7 @@ const statusDiv = document.getElementById('status');
 const tempSpan = document.getElementById('temp');
 const humSpan = document.getElementById('hum');
 
+// MQTT Events
 client.on('connect', () => {
   statusDiv.textContent = "Connected to MQTT Broker";
   statusDiv.className = "connected";
@@ -64,11 +65,10 @@ client.on('error', (err) => {
 client.on('message', (t, message) => {
   if(t !== topic) return;
   try {
-    const dataArr = JSON.parse(message.toString()); // NodeMCU publish array JSON
-    if(dataArr.length > 0){
-      const latest = dataArr[0]; // ambil data terbaru
-      tempSpan.textContent = latest.temperature.toFixed(1);
-      humSpan.textContent = latest.humidity.toFixed(1);
+    const data = JSON.parse(message.toString()); // NodeMCU publish JSON
+    if(data.temperature !== undefined && data.humidity !== undefined){
+      tempSpan.textContent = data.temperature.toFixed(1);
+      humSpan.textContent = data.humidity.toFixed(1);
     }
   } catch(e){
     console.error("Error parsing JSON:", e);
