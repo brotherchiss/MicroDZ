@@ -3,23 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MQTT Connection Status</title>
+<title>ESP8266 DHT22 Monitor</title>
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
 body { font-family: Arial; margin: 20px; background: #f6f8fa; }
 h1 { text-align: center; }
-#status { padding: 10px; border: 1px solid #ccc; background: #fff; text-align: center; font-weight: bold; }
+#status { padding: 10px; border: 1px solid #ccc; background: #fff; text-align: center; font-weight: bold; margin-bottom: 20px; }
 .connected { color: green; }
 .disconnected { color: red; }
+#data { padding: 10px; border: 1px solid #ccc; background: #fff; text-align: center; }
 </style>
 </head>
 <body>
 
-<h1>Status MQTT Broker</h1>
+<h1>ESP8266 DHT22 Monitor</h1>
+
 <div id="status" class="disconnected">Disconnected</div>
+
+<div id="data">
+<p>Suhu: <span id="temp">-</span> °C</p>
+<p>Kelembaban: <span id="hum">-</span> %</p>
+</div>
 
 <script>
 const broker = "wss://broker.hivemq.com:8884/mqtt";
+const topic = "sensor/esp8266_01/dht22";
+
 const client = mqtt.connect(broker, {
   clean: true,
   connectTimeout: 4000,
@@ -27,10 +36,13 @@ const client = mqtt.connect(broker, {
 });
 
 const statusDiv = document.getElementById('status');
+const tempSpan = document.getElementById('temp');
+const humSpan = document.getElementById('hum');
 
 client.on('connect', () => {
   statusDiv.textContent = "Connected to MQTT Broker";
   statusDiv.className = "connected";
+  client.subscribe(topic);
 });
 
 client.on('reconnect', () => {
@@ -46,6 +58,22 @@ client.on('offline', () => {
 client.on('error', (err) => {
   statusDiv.textContent = "Error: " + err.message;
   statusDiv.className = "disconnected";
+});
+
+client.on('message', (t, message) => {
+  if(t !== topic) return;
+  try {
+    // jika NodeMCU kirim array JSON 10 data terakhir
+    let dataArr = JSON.parse(message.toString());
+    // ambil data terakhir
+    let latest = dataArr[dataArr.length - 1];
+
+    tempSpan.textContent = latest.temperature.toFixed(1);
+    humSpan.textContent = latest.humidity.toFixed(1);
+
+  } catch(e){
+    console.error("Error parsing JSON:", e);
+  }
 });
 </script>
 
