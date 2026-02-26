@@ -223,11 +223,12 @@
 
     /* ================= AUTH GUARD ================= */
     const authGuard = document.getElementById("auth-guard");
+    const REDIRECT_URL = "https://brotherchiss.github.io/MicroDZ/esp8266-01/index.html";
 
     onAuthStateChanged(auth, (user) => {
         if (!user) {
-            // Jika tidak login, kembalikan ke halaman login utama
-            window.location.href = "https://brotherchiss.github.io/MicroDZ/esp8266-01/index.html";
+            // Jika tidak login, kembalikan ke halaman eksternal GitHub
+            window.location.href = REDIRECT_URL;
         } else {
             // Jika login, hilangkan guard dan mulai MQTT
             authGuard.classList.add("hidden");
@@ -237,7 +238,8 @@
 
     /* ================= NAVIGATION ================= */
     document.getElementById("backBtn").onclick = () => {
-        window.location.href = "user-dashboard.html"; // Asumsi ini nama file User Terminal Anda
+        // Kembali ke halaman terminal (GitHub index)
+        window.location.href = REDIRECT_URL;
     };
 
     /* ================= MQTT LOGIC ================= */
