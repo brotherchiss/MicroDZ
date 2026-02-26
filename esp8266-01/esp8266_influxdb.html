@@ -1,431 +1,230 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor DHT22 Minimalis</title>
-    <!-- MQTT Library -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <title>MQTT Monitor Minimal</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-
         body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 10px;
             background: #f5f5f5;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
         }
-
-        .container {
-            max-width: 500px;
-            width: 100%;
-        }
-
         .card {
             background: white;
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            border-radius: 8px;
+            padding: 20px;
             margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
-        .header h1 {
-            font-size: 1.5rem;
-            color: #333;
-        }
-
         .status {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
+            gap: 10px;
+            margin-bottom: 15px;
         }
-
         .led {
-            width: 10px;
-            height: 10px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            background: #ff4444;
+            background: #f44336;
         }
-
         .led.online {
             background: #4caf50;
-            box-shadow: 0 0 5px #4caf50;
+            box-shadow: 0 0 8px #4caf50;
         }
-
-        .sensor-row {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .sensor-item {
-            flex: 1;
-            background: #fafafa;
-            border-radius: 16px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .sensor-label {
-            font-size: 0.85rem;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .sensor-value {
-            font-size: 2.2rem;
-            font-weight: 600;
-            color: #333;
-            line-height: 1.2;
-        }
-
-        .sensor-unit {
-            font-size: 0.9rem;
-            color: #999;
-            margin-left: 2px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-        }
-
-        .history-title {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 12px;
-        }
-
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 0.95rem;
-        }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
-        .history-time {
-            color: #999;
-            font-size: 0.85rem;
-        }
-
-        .history-temp {
-            font-weight: 500;
-            color: #ff6b6b;
-        }
-
-        .history-hum {
-            font-weight: 500;
-            color: #4d9eff;
-        }
-
-        .debug {
-            font-size: 0.8rem;
-            color: #999;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px dashed #ddd;
-            word-break: break-word;
-        }
-
-        .reconnect-btn {
-            background: #4caf50;
+        button {
+            background: #2196f3;
             color: white;
             border: none;
-            border-radius: 20px;
             padding: 8px 16px;
-            font-size: 0.9rem;
+            border-radius: 4px;
             cursor: pointer;
-            margin-top: 10px;
-            width: 100%;
+            font-size: 14px;
         }
-
-        .reconnect-btn:hover {
-            background: #45a049;
+        button:hover {
+            background: #1976d2;
+        }
+        pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .log {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-size: 12px;
+            background: #fafafa;
+        }
+        .log p {
+            margin: 2px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info {
+            color: #2196f3;
+        }
+        .error {
+            color: #f44336;
+        }
+        .success {
+            color: #4caf50;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <div class="header">
-                <h1>🌡️ DHT22 Monitor</h1>
-                <div class="status" id="status">
-                    <span class="led" id="statusLed"></span>
-                    <span id="statusText">Menghubungkan...</span>
-                </div>
-            </div>
-
-            <div class="sensor-row">
-                <div class="sensor-item">
-                    <div class="sensor-label">Suhu</div>
-                    <div>
-                        <span class="sensor-value" id="tempValue">--</span>
-                        <span class="sensor-unit">°C</span>
-                    </div>
-                </div>
-                <div class="sensor-item">
-                    <div class="sensor-label">Kelembaban</div>
-                    <div>
-                        <span class="sensor-value" id="humValue">--</span>
-                        <span class="sensor-unit">%</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="info-row">
-                <span>Data tersimpan: <span id="dataCount">0</span></span>
-                <span>Update: <span id="lastUpdate">--:--:--</span></span>
-            </div>
-
-            <button class="reconnect-btn" id="reconnectBtn">🔄 Sambungkan Ulang</button>
+    <div class="card">
+        <h2>📡 MQTT Monitor</h2>
+        <div class="status">
+            <div class="led" id="led"></div>
+            <span id="statusText">Menghubungkan...</span>
         </div>
-
-        <div class="card">
-            <div class="history-title">📋 Riwayat 10 Data Terakhir</div>
-            <div id="historyContainer">
-                <div style="text-align: center; color: #999; padding: 20px;">Menunggu data...</div>
-            </div>
-        </div>
-
-        <div class="card debug" id="debug">
-            <div><strong>Debug:</strong> <span id="debugMsg">Inisialisasi...</span></div>
-        </div>
+        <button id="reconnectBtn">Reconnect MQTT</button>
+        <p><small>Topic: <span id="topicDisplay">sensor/esp8266_01/dht22</span></small></p>
     </div>
 
+    <div class="card">
+        <h3>📨 Pesan Terakhir</h3>
+        <pre id="lastMessage">(belum ada)</pre>
+    </div>
+
+    <div class="card">
+        <h3>📋 Log</h3>
+        <div class="log" id="log"></div>
+    </div>
+
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script>
         // Konfigurasi
-        const MQTT_CONFIG = {
-            host: 'broker.hivemq.com',
-            port: 8884,           // WebSocket port
-            topic: 'sensor/esp8266_01/dht22'
-        };
-
-        // State
-        let mqttClient = null;
+        const MQTT_HOST = 'broker.hivemq.com';
+        const MQTT_PORT = 8000; // WebSocket
+        const MQTT_TOPIC = 'sensor/esp8266_01/dht22';
+        
+        let client = null;
         let reconnectTimer = null;
-        let historyData = [];
-        let lastDataTime = null;
+        let manualReconnect = false;
 
-        // Elemen DOM
-        const statusLed = document.getElementById('statusLed');
+        const led = document.getElementById('led');
         const statusText = document.getElementById('statusText');
-        const tempValue = document.getElementById('tempValue');
-        const humValue = document.getElementById('humValue');
-        const dataCount = document.getElementById('dataCount');
-        const lastUpdate = document.getElementById('lastUpdate');
-        const historyContainer = document.getElementById('historyContainer');
-        const debugMsg = document.getElementById('debugMsg');
-        const reconnectBtn = document.getElementById('reconnectBtn');
+        const lastMessageEl = document.getElementById('lastMessage');
+        const logEl = document.getElementById('log');
 
-        // Helper debug
-        function setDebug(msg) {
-            console.log('[Debug]', msg);
-            debugMsg.textContent = msg;
+        function addLog(message, type = 'info') {
+            const p = document.createElement('p');
+            p.className = type;
+            p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEl.appendChild(p);
+            logEl.scrollTop = logEl.scrollHeight;
         }
 
-        // Update status koneksi
-        function setConnectionStatus(connected) {
+        function setStatus(connected) {
             if (connected) {
-                statusLed.className = 'led online';
+                led.className = 'led online';
                 statusText.textContent = 'Terhubung';
                 statusText.style.color = '#4caf50';
+                addLog('MQTT terhubung', 'success');
             } else {
-                statusLed.className = 'led';
+                led.className = 'led';
                 statusText.textContent = 'Terputus';
-                statusText.style.color = '#ff4444';
+                statusText.style.color = '#f44336';
+                addLog('MQTT terputus', 'error');
             }
         }
 
-        // Update tampilan data terbaru
-        function updateDisplay(data) {
-            if (!data || data.length === 0) return;
-
-            // Data terbaru adalah elemen terakhir array
-            const latest = data[data.length - 1];
-            
-            tempValue.textContent = latest.temperature.toFixed(1);
-            humValue.textContent = latest.humidity.toFixed(1);
-            dataCount.textContent = data.length;
-
-            const now = new Date();
-            lastUpdate.textContent = now.toLocaleTimeString('id-ID');
-            
-            // Update riwayat
-            renderHistory(data);
-        }
-
-        // Render tabel riwayat
-        function renderHistory(data) {
-            if (data.length === 0) {
-                historyContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Belum ada data</div>';
-                return;
-            }
-
-            let html = '';
-            // Tampilkan dari terbaru ke terlama (reverse order)
-            data.slice().reverse().forEach((item, index) => {
-                const time = new Date().toLocaleTimeString('id-ID'); // Sementara pakai waktu sekarang
-                html += `
-                    <div class="history-item">
-                        <span class="history-time">${index+1}. ${time}</span>
-                        <span>
-                            <span class="history-temp">${item.temperature.toFixed(1)}°C</span> |
-                            <span class="history-hum">${item.humidity.toFixed(1)}%</span>
-                        </span>
-                    </div>
-                `;
-            });
-            historyContainer.innerHTML = html;
-        }
-
-        // Inisialisasi koneksi MQTT
         function connectMQTT() {
-            setDebug('Menghubungkan ke MQTT...');
-            setConnectionStatus(false);
-
-            if (mqttClient) {
-                try {
-                    mqttClient.end(true);
-                } catch (e) {}
-                mqttClient = null;
+            if (client && client.connected) {
+                client.end();
             }
 
-            const clientId = 'web_dht_' + Math.random().toString(16).substring(2, 10);
-            
-            mqttClient = mqtt.connect(`ws://${MQTT_CONFIG.host}:${MQTT_CONFIG.port}/mqtt`, {
-                clientId: clientId,
-                clean: true,
-                connectTimeout: 5000,
-                reconnectPeriod: 5000,  // Auto reconnect setiap 5 detik
-                keepalive: 30
-            });
+            const clientId = 'webclient_' + Math.random().toString(36).substring(2, 10);
+            addLog(`Menghubungkan ke ${MQTT_HOST}:${MQTT_PORT} sebagai ${clientId}...`);
 
-            mqttClient.on('connect', () => {
-                setDebug('Terhubung ke broker');
-                setConnectionStatus(true);
+            try {
+                client = mqtt.connect(`ws://${MQTT_HOST}:${MQTT_PORT}/mqtt`, {
+                    clientId: clientId,
+                    clean: true,
+                    connectTimeout: 5000,
+                    reconnectPeriod: 0, // non-aktifkan auto reconnect built-in, kita handle manual
+                });
 
-                mqttClient.subscribe(MQTT_CONFIG.topic, { qos: 0 }, (err) => {
-                    if (err) {
-                        setDebug('Gagal subscribe: ' + err);
-                    } else {
-                        setDebug('Subscribe OK, menunggu data...');
+                client.on('connect', () => {
+                    setStatus(true);
+                    client.subscribe(MQTT_TOPIC, (err) => {
+                        if (err) {
+                            addLog(`Gagal subscribe: ${err}`, 'error');
+                        } else {
+                            addLog(`Subscribe ke ${MQTT_TOPIC} berhasil`, 'success');
+                        }
+                    });
+                });
+
+                client.on('message', (topic, message) => {
+                    const msgStr = message.toString();
+                    addLog(`Pesan dari ${topic}: ${msgStr}`, 'info');
+                    lastMessageEl.textContent = msgStr;
+                    
+                    // Coba parse JSON untuk validasi
+                    try {
+                        const data = JSON.parse(msgStr);
+                        lastMessageEl.textContent = JSON.stringify(data, null, 2);
+                    } catch (e) {
+                        // bukan JSON, tampilkan apa adanya
                     }
                 });
-            });
 
-            mqttClient.on('message', (topic, message) => {
-                try {
-                    const payload = message.toString();
-                    setDebug('Data diterima: ' + payload.substring(0, 50) + (payload.length > 50 ? '...' : ''));
-                    
-                    const data = JSON.parse(payload);
-                    if (Array.isArray(data)) {
-                        historyData = data;
-                        updateDisplay(data);
-                        lastDataTime = Date.now();
-                    } else {
-                        setDebug('Format data tidak sesuai (bukan array)');
+                client.on('error', (err) => {
+                    addLog(`Error: ${err.message}`, 'error');
+                    setStatus(false);
+                });
+
+                client.on('close', () => {
+                    setStatus(false);
+                    addLog('Koneksi ditutup', 'error');
+                    // Coba reconnect otomatis setelah 5 detik jika bukan manual
+                    if (!manualReconnect) {
+                        if (reconnectTimer) clearTimeout(reconnectTimer);
+                        reconnectTimer = setTimeout(() => {
+                            addLog('Mencoba reconnect otomatis...');
+                            connectMQTT();
+                        }, 5000);
                     }
-                } catch (e) {
-                    setDebug('Error parsing: ' + e.message);
-                }
-            });
+                });
 
-            mqttClient.on('error', (err) => {
-                setDebug('Error: ' + err.message);
-                setConnectionStatus(false);
-            });
-
-            mqttClient.on('close', () => {
-                setDebug('Koneksi ditutup');
-                setConnectionStatus(false);
-            });
-
-            mqttClient.on('offline', () => {
-                setDebug('Offline');
-                setConnectionStatus(false);
-            });
-
-            mqttClient.on('reconnect', () => {
-                setDebug('Mencoba reconnect...');
-                setConnectionStatus(false);
-            });
-        }
-
-        // Manual reconnect
-        function manualReconnect() {
-            setDebug('Reconnect manual...');
-            connectMQTT();
-        }
-
-        // Cek apakah data sudah lama tidak update
-        function checkStaleData() {
-            if (!lastDataTime) return;
-            const staleThreshold = 15000; // 15 detik
-            if (Date.now() - lastDataTime > staleThreshold) {
-                // Data tidak update, mungkin koneksi bermasalah
-                if (mqttClient && !mqttClient.connected) {
-                    setDebug('Data tidak update, mencoba reconnect...');
-                    connectMQTT();
-                }
+            } catch (e) {
+                addLog(`Exception: ${e.message}`, 'error');
+                setStatus(false);
             }
         }
 
-        // Inisialisasi
-        window.addEventListener('load', () => {
-            connectMQTT();
-            reconnectBtn.addEventListener('click', manualReconnect);
-            
-            // Cek stale data setiap 10 detik
-            setInterval(checkStaleData, 10000);
-            
-            // Simulasi data jika tidak ada koneksi (untuk testing, hapus jika sudah real)
-            // setTimeout(() => {
-            //     if (historyData.length === 0) {
-            //         const mock = [];
-            //         for (let i=0; i<10; i++) {
-            //             mock.push({
-            //                 temperature: 25 + Math.random()*5,
-            //                 humidity: 60 + Math.random()*20
-            //             });
-            //         }
-            //         historyData = mock;
-            //         updateDisplay(mock);
-            //         setDebug('Mode simulasi (tidak ada koneksi MQTT)');
-            //     }
-            // }, 3000);
+        function disconnectMQTT() {
+            manualReconnect = true;
+            if (client) {
+                client.end(true, () => {
+                    addLog('Koneksi dihentikan manual');
+                });
+            }
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+        }
+
+        document.getElementById('reconnectBtn').addEventListener('click', () => {
+            manualReconnect = false; // biarkan auto reconnect setelahnya
+            disconnectMQTT();
+            setTimeout(() => connectMQTT(), 500);
         });
+
+        // Mulai koneksi
+        connectMQTT();
+
+        // Tampilkan topic
+        document.getElementById('topicDisplay').textContent = MQTT_TOPIC;
     </script>
 </body>
 </html>
