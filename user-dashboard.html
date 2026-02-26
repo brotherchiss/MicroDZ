@@ -220,14 +220,14 @@
                 if (data.monitoringUrl) {
                     monitoringBtn.disabled = false;
                     monitoringBtn.onclick = () => {
-                        window.open(ensureAbsoluteUrl(data.monitoringUrl), "_blank");
+                        window.open(ensureAbsoluteUrl(data.monitoringUrl), "_self");
                     };
                 }
 
                 if (data.reportUrl) {
                     reportBtn.disabled = false;
                     reportBtn.onclick = () => {
-                        window.open(ensureAbsoluteUrl(data.reportUrl), "_blank");
+                        window.open(ensureAbsoluteUrl(data.reportUrl), "_self");
                     };
                 }
             } catch (error) {
