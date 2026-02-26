@@ -2,77 +2,57 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>DHT22 Realtime + History</title>
+<title>DHT22 History via Worker</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>body{font-family:Arial,sans-serif;margin:20px}canvas{max-width:100%;height:400px}</style>
 </head>
 <body>
-<h2>DHT22 Sensor Realtime + History</h2>
+<h2>DHT22 History (6 jam) via Worker</h2>
 <canvas id="chart"></canvas>
 
 <script>
-const influxURL = "https://us-east-1-1.aws.cloud2.influxdata.com/api/v2/query?org=MicroDZ";
-const token = "jaM7a03Hgl-X7IsyINBjGrh-FBG2s2tVwUB0QEqurIOeVQiwqW_TNBElQVPNwvx_StJDyXLNwiPnDvm6EdYQeg==";
-const mqttBroker = "ws://broker.hivemq.com:8000/mqtt";
-const mqttTopic = "sensor/esp8266_01/dht22";
+const workerURL = "https://esp8266-01.wahyu-ikhsannudin.workers.dev"; // ganti sesuai URL Worker
 
-// Chart.js setup
-const ctx = document.getElementById('chart').getContext('2d');
-const chart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: [],
-    datasets: [
-      { label:'Temperature (°C)', data:[], borderColor:'red', fill:false },
-      { label:'Humidity (%)', data:[], borderColor:'blue', fill:false }
-    ]
-  },
-  options: { responsive:true, scales:{x:{display:true},y:{display:true}} }
-});
-
-// Fetch history from InfluxDB
 async function fetchHistory() {
-  const body = JSON.stringify({ query: 'from(bucket:"ESP8266-01") |> range(start:-6h) |> filter(fn:(r)=>r._measurement=="dht22")' });
-  const res = await fetch(influxURL, {
-    method:"POST",
-    headers: { "Authorization":"Token "+token, "Content-Type":"application/json" },
-    body: body
-  });
+  const res = await fetch(workerURL);
   const data = await res.json();
+
+  const labels = [];
+  const temperature = [];
+  const humidity = [];
 
   if(data.results && data.results[0].tables) {
     data.results[0].tables.forEach(table=>{
       table.records.forEach(r=>{
         const time = new Date(r._time).toLocaleTimeString();
-        if(!chart.data.labels.includes(time)) chart.data.labels.push(time);
-        if(r._field==="temperature") chart.data.datasets[0].data.push(r._value);
-        if(r._field==="humidity") chart.data.datasets[1].data.push(r._value);
+        labels.push(time);
+        if(r._field === "temperature") temperature.push(r._value);
+        if(r._field === "humidity") humidity.push(r._value);
       });
     });
   }
-  chart.update();
+
+  return { labels, temperature, humidity };
 }
 
-// Realtime via MQTT
-const client = mqtt.connect(mqttBroker);
-client.on('connect',()=>client.subscribe(mqttTopic));
-client.on('message',(topic,message)=>{
-  const obj = JSON.parse(message.toString());
-  const time = new Date().toLocaleTimeString();
-  chart.data.labels.push(time);
-  chart.data.datasets[0].data.push(obj.temperature);
-  chart.data.datasets[1].data.push(obj.humidity);
-  if(chart.data.labels.length>50){ // limit 50 point
-    chart.data.labels.shift();
-    chart.data.datasets[0].data.shift();
-    chart.data.datasets[1].data.shift();
-  }
-  chart.update();
-});
+async function drawChart() {
+  const { labels, temperature, humidity } = await fetchHistory();
 
-// Jalankan
-fetchHistory();
+  const ctx = document.getElementById('chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Temperature (°C)', data: temperature, borderColor: 'red', fill:false },
+        { label: 'Humidity (%)', data: humidity, borderColor: 'blue', fill:false }
+      ]
+    },
+    options: { responsive:true }
+  });
+}
+
+drawChart();
 </script>
 </body>
 </html>
