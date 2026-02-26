@@ -1,100 +1,89 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ESP8266 DHT22 Monitor</title>
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f6f8fa; }
-    h1 { text-align: center; }
-    #latest { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #fff; }
-    #history { padding: 10px; border: 1px solid #ccc; background: #fff; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 8px; text-align: center; border: 1px solid #ccc; }
-    th { background-color: #eee; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP8266 DHT22 Monitor</title>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<style>
+body { font-family: Arial; margin: 20px; background-color: #f6f8fa; }
+h1 { text-align: center; }
+#latest, #history { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #fff; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 8px; text-align: center; border: 1px solid #ccc; }
+th { background-color: #eee; }
+</style>
 </head>
 <body>
 
 <h1>Monitor ESP8266 DHT22</h1>
 
 <div id="latest">
-  <h2>Data Terbaru</h2>
-  <p>Suhu: <span id="temp">-</span> °C</p>
-  <p>Kelembaban: <span id="hum">-</span> %</p>
+<h2>Data Terbaru</h2>
+<p>Suhu: <span id="temp">-</span> °C</p>
+<p>Kelembaban: <span id="hum">-</span> %</p>
 </div>
 
 <div id="history">
-  <h2>History 10 Data Terakhir</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>No</th>
-        <th>Suhu (°C)</th>
-        <th>Kelembaban (%)</th>
-      </tr>
-    </thead>
-    <tbody id="historyBody">
-      <!-- Data akan diisi JS -->
-    </tbody>
-  </table>
+<h2>History 10 Data Terakhir</h2>
+<table>
+<thead>
+<tr><th>No</th><th>Suhu (°C)</th><th>Kelembaban (%)</th></tr>
+</thead>
+<tbody id="historyBody"></tbody>
+</table>
 </div>
 
 <script>
-  // ===== Konfigurasi MQTT =====
-  const broker = "wss://broker.hivemq.com:8884/mqtt"; // WebSocket Secure
-  const topic = "sensor/esp8266_01/dht22";
+const broker = "wss://broker.hivemq.com:8884/mqtt";
+const topic = "sensor/esp8266_01/dht22";
 
-  const client = mqtt.connect(broker, {
-    clean: true,
-    connectTimeout: 4000,
-    reconnectPeriod: 1000
+const client = mqtt.connect(broker, {
+  clean: true,
+  connectTimeout: 4000,
+  reconnectPeriod: 1000
+});
+
+client.on('connect', () => {
+  console.log("MQTT connected");
+  client.subscribe(topic, (err) => {
+    if(!err) console.log("Subscribed to topic:", topic);
   });
+});
 
-  let history = [];
+let history = [];
 
-  client.on('connect', () => {
-    console.log("MQTT connected");
-    client.subscribe(topic, (err) => {
-      if (!err) console.log("Subscribed to topic:", topic);
-    });
-  });
-
-  client.on('message', (t, message) => {
-    if (t === topic) {
-      try {
-        const data = JSON.parse(message.toString());
-
-        // Update latest
-        document.getElementById('temp').textContent = data.temperature.toFixed(1);
-        document.getElementById('hum').textContent = data.humidity.toFixed(1);
-
-        // Simpan history (maksimal 10 data)
-        history.push(data);
-        if (history.length > 10) history.shift();
-
-        // Update tabel history
-        const tbody = document.getElementById('historyBody');
-        tbody.innerHTML = ""; // reset tabel
-        history.forEach((d, i) => {
-          const row = `<tr>
-                        <td>${i + 1}</td>
-                        <td>${d.temperature.toFixed(1)}</td>
-                        <td>${d.humidity.toFixed(1)}</td>
-                      </tr>`;
-          tbody.innerHTML += row;
-        });
-      } catch (e) {
-        console.error("Error parsing data:", e);
+client.on('message', (t, message) => {
+  if(t !== topic) return;
+  try {
+    const dataObj = JSON.parse(message.toString());
+    history = []; // reset
+    for(let key in dataObj){
+      if(dataObj.hasOwnProperty(key)){
+        history.push(dataObj[key]);
       }
     }
-  });
 
-  client.on('error', (err) => {
-    console.error("MQTT Error:", err);
-  });
+    // Update latest
+    const latest = history[history.length - 1];
+    document.getElementById('temp').textContent = latest.temperature.toFixed(1);
+    document.getElementById('hum').textContent = latest.humidity.toFixed(1);
+
+    // Update tabel
+    const tbody = document.getElementById('historyBody');
+    tbody.innerHTML = "";
+    history.forEach((d,i)=>{
+      tbody.innerHTML += `<tr>
+        <td>${i+1}</td>
+        <td>${d.temperature.toFixed(1)}</td>
+        <td>${d.humidity.toFixed(1)}</td>
+      </tr>`;
+    });
+
+  } catch(e){
+    console.error("Error parsing JSON:", e);
+  }
+});
 </script>
-
 </body>
 </html>
