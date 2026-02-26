@@ -225,12 +225,16 @@
     /* ================= AUTH GUARD ================= */
     const authGuard = document.getElementById("auth-guard");
     const guardText = document.getElementById("guard-text");
-    const REDIRECT_URL = "https://brotherchiss.github.io/MicroDZ/index.html";
+    
+    // URL untuk Redirect jika Gagal Login
+    const LOGIN_PAGE_URL = "https://brotherchiss.github.io/MicroDZ/index.html";
+    // URL untuk Tombol Kembali (Dashboard User)
+    const USER_DASHBOARD_URL = "user-dashboard.html";
 
-    // Timeout safety: Jika dalam 8 detik tidak ada respon dari Firebase, paksa redirect
+    // Timeout safety: Jika dalam 8 detik tidak ada respon dari Firebase, paksa redirect ke Login
     const authTimeout = setTimeout(() => {
         guardText.innerText = "TIMEOUT: REDIRECTING...";
-        window.location.href = REDIRECT_URL;
+        window.location.href = LOGIN_PAGE_URL;
     }, 8000);
 
     onAuthStateChanged(auth, (user) => {
@@ -238,7 +242,7 @@
         
         if (!user) {
             guardText.innerText = "ACCESS_DENIED";
-            window.location.href = REDIRECT_URL;
+            window.location.href = LOGIN_PAGE_URL;
         } else {
             // Animasi transisi halus saat masuk
             authGuard.style.opacity = "0";
@@ -251,7 +255,8 @@
 
     /* ================= NAVIGATION ================= */
     document.getElementById("backBtn").onclick = () => {
-        window.location.href = REDIRECT_URL;
+        // Kembali ke dashboard user tanpa logout
+        window.location.href = USER_DASHBOARD_URL;
     };
 
     /* ================= MQTT LOGIC ================= */
