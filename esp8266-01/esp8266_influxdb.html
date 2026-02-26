@@ -8,7 +8,8 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background-color: #f6f8fa; }
     h1 { text-align: center; }
-    #latest { margin-bottom: 20px; }
+    #latest { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #fff; }
+    #history { padding: 10px; border: 1px solid #ccc; background: #fff; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 8px; text-align: center; border: 1px solid #ccc; }
     th { background-color: #eee; }
@@ -42,10 +43,14 @@
 
 <script>
   // ===== Konfigurasi MQTT =====
-  const broker = "wss://broker.hivemq.com:8884/mqtt"; // WebSocket HiveMQ
+  const broker = "wss://broker.hivemq.com:8884/mqtt"; // WebSocket Secure
   const topic = "sensor/esp8266_01/dht22";
 
-  const client = mqtt.connect(broker);
+  const client = mqtt.connect(broker, {
+    clean: true,
+    connectTimeout: 4000,
+    reconnectPeriod: 1000
+  });
 
   let history = [];
 
@@ -57,32 +62,37 @@
   });
 
   client.on('message', (t, message) => {
-    if(t === topic){
+    if (t === topic) {
       try {
         const data = JSON.parse(message.toString());
+
         // Update latest
         document.getElementById('temp').textContent = data.temperature.toFixed(1);
         document.getElementById('hum').textContent = data.humidity.toFixed(1);
 
-        // Simpan history (max 10)
+        // Simpan history (maksimal 10 data)
         history.push(data);
-        if(history.length > 10) history.shift();
+        if (history.length > 10) history.shift();
 
-        // Tampilkan history
+        // Update tabel history
         const tbody = document.getElementById('historyBody');
-        tbody.innerHTML = "";
+        tbody.innerHTML = ""; // reset tabel
         history.forEach((d, i) => {
           const row = `<tr>
-                        <td>${i+1}</td>
+                        <td>${i + 1}</td>
                         <td>${d.temperature.toFixed(1)}</td>
                         <td>${d.humidity.toFixed(1)}</td>
                       </tr>`;
           tbody.innerHTML += row;
         });
-      } catch(e) {
+      } catch (e) {
         console.error("Error parsing data:", e);
       }
     }
+  });
+
+  client.on('error', (err) => {
+    console.error("MQTT Error:", err);
   });
 </script>
 
