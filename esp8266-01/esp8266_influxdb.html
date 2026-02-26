@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ESP8266 DHT22 Monitor HISTORY</title>
+<title>Monitor DHT22 ESP8266</title>
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
-body { font-family: Arial; margin: 20px; background-color: #f6f8fa; }
+body { font-family: Arial; margin: 20px; background: #f6f8fa; }
 h1 { text-align: center; }
 #latest, #history { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #fff; }
 table { width: 100%; border-collapse: collapse; }
@@ -16,7 +16,7 @@ th { background-color: #eee; }
 </head>
 <body>
 
-<h1>Monitor ESP8266 DHT22</h1>
+<h1>ESP8266 DHT22 Monitor</h1>
 
 <div id="latest">
 <h2>Data Terbaru</h2>
@@ -35,6 +35,7 @@ th { background-color: #eee; }
 </div>
 
 <script>
+// Hubungkan ke broker HiveMQ (WebSocket)
 const broker = "wss://broker.hivemq.com:8884/mqtt";
 const topic = "sensor/esp8266_01/dht22";
 
@@ -44,6 +45,8 @@ const client = mqtt.connect(broker, {
   reconnectPeriod: 1000
 });
 
+let history = [];
+
 client.on('connect', () => {
   console.log("MQTT connected");
   client.subscribe(topic, (err) => {
@@ -51,12 +54,10 @@ client.on('connect', () => {
   });
 });
 
-let history = [];
-
 client.on('message', (t, message) => {
   if(t !== topic) return;
   try {
-    const dataArr = JSON.parse(message.toString()); // array JSON
+    const dataArr = JSON.parse(message.toString()); // JSON array 10 data terakhir
     history = dataArr;
 
     // Update latest
