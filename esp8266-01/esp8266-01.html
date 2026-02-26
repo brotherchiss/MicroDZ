@@ -91,10 +91,44 @@
 
         .glow-text-green { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
         .glow-text-blue { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+
+        .btn-back {
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.05);
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.65rem;
+            font-weight: bold;
+        }
+        .btn-back:hover {
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        #auth-guard {
+            position: fixed;
+            inset: 0;
+            background: var(--dark-bg);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+<!-- AUTH GUARD OVERLAY -->
+<div id="auth-guard">
+    <div class="text-center">
+        <div class="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-xs text-cyan-500 tracking-[0.3em] font-bold uppercase animate-pulse">Verifying_Identity...</p>
+    </div>
+</div>
 
 <!-- CIRCUIT DECORATION -->
 <div class="fixed top-0 left-0 w-full h-full pointer-events-none opacity-20 overflow-hidden z-0">
@@ -144,7 +178,7 @@
         </div>
 
         <!-- SYSTEM STATUS -->
-        <div class="status-bar pt-4 text-[9px] text-gray-500 uppercase flex flex-col gap-1">
+        <div class="status-bar pt-4 text-[9px] text-gray-500 uppercase flex flex-col gap-1 mb-6">
             <div class="flex justify-between">
                 <span>Signal_Protocol:</span>
                 <span class="text-cyan-400">MQTT/WSS</span>
@@ -158,6 +192,11 @@
                 <span id="last-sync" class="text-gray-400">Never</span>
             </div>
         </div>
+
+        <!-- BACK BUTTON -->
+        <button id="backBtn" class="btn-back w-full py-3 rounded flex items-center justify-center gap-2">
+            <span>« RETURN_TO_TERMINAL</span>
+        </button>
     </div>
 
 </main>
@@ -167,90 +206,103 @@
     <p class="text-[10px] text-cyan-900 font-bold uppercase tracking-[0.2em]">© 2025 MicroDZ Digital Systems</p>
 </footer>
 
-<script>
-    /* ================= MQTT CONFIG ================= */
-    const brokerUrl = "wss://broker.hivemq.com:8884/mqtt";
-    const topicData = "sensor/esp8266_01/dht22";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-    const options = {
-        clientId: "microdz_web_" + Math.random().toString(16).substr(2, 8),
-        clean: true,
-        connectTimeout: 5000
+    /* ================= FIREBASE CONFIG ================= */
+    const firebaseConfig = {
+        apiKey: "AIzaSyBUH3svPecRr-75zmHA3kYJ-ypDeuZzey0",
+        authDomain: "microdz-login.firebaseapp.com",
+        projectId: "microdz-login",
+        appId: "1:407509494952:web:c1e8d31bf39ec05847669d"
     };
 
-    /* ================= UI ELEMENTS ================= */
-    const statusText = document.getElementById("status-text");
-    const indicator  = document.getElementById("conn-indicator");
-    const tempEl     = document.getElementById("temp");
-    const humEl      = document.getElementById("hum");
-    const tempBar    = document.getElementById("temp-bar");
-    const humBar     = document.getElementById("hum-bar");
-    const lastSyncEl = document.getElementById("last-sync");
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-    /* ================= MQTT LOGIC ================= */
-    const client = mqtt.connect(brokerUrl, options);
+    /* ================= AUTH GUARD ================= */
+    const authGuard = document.getElementById("auth-guard");
 
-    client.on("connect", () => {
-        statusText.innerText = "CONNECTED";
-        statusText.className = "text-green-500";
-        indicator.innerText = "● ONLINE";
-        indicator.className = "text-green-500 animate-pulse";
-        client.subscribe(topicData);
-        console.log("Connected to MicroDZ Network");
-    });
-
-    client.on("reconnect", () => {
-        statusText.innerText = "RECONNECTING...";
-        statusText.className = "text-yellow-500";
-        indicator.innerText = "● SYNC_LOSS";
-        indicator.className = "text-yellow-500 animate-pulse";
-    });
-
-    client.on("offline", () => {
-        statusText.innerText = "OFFLINE";
-        statusText.className = "text-red-500";
-        indicator.innerText = "● DISCONNECTED";
-        indicator.className = "text-red-500";
-    });
-
-    client.on("message", (topic, message) => {
-        try {
-            const data = JSON.parse(message.toString());
-            const now = new Date();
-            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
-                            now.getMinutes().toString().padStart(2, '0') + ":" + 
-                            now.getSeconds().toString().padStart(2, '0');
-
-            if (data.temperature !== undefined) {
-                const t = data.temperature.toFixed(1);
-                tempEl.innerText = t;
-                // Progress bar mapping (0 to 50 degrees)
-                const percent = Math.min(Math.max((t / 50) * 100, 0), 100);
-                tempBar.style.width = percent + "%";
-            }
-
-            if (data.humidity !== undefined) {
-                const h = data.humidity.toFixed(1);
-                humEl.innerText = h;
-                // Progress bar mapping (0 to 100%)
-                humBar.style.width = h + "%";
-            }
-
-            lastSyncEl.innerText = timeStr;
-            
-            // Visual feedback on card update
-            indicator.style.opacity = "1";
-            setTimeout(() => { indicator.style.opacity = "0.7"; }, 200);
-
-        } catch (e) {
-            console.error("Payload_Corruption: Invalid JSON Structure", e);
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            // Jika tidak login, kembalikan ke halaman login utama
+            window.location.href = "index.html";
+        } else {
+            // Jika login, hilangkan guard dan mulai MQTT
+            authGuard.classList.add("hidden");
+            initMQTT();
         }
     });
 
-    client.on("error", (err) => {
-        statusText.innerText = "CORE_ERROR";
-        console.error("Critical System Error:", err);
-    });
+    /* ================= NAVIGATION ================= */
+    document.getElementById("backBtn").onclick = () => {
+        window.location.href = "user-dashboard.html"; // Asumsi ini nama file User Terminal Anda
+    };
+
+    /* ================= MQTT LOGIC ================= */
+    function initMQTT() {
+        const brokerUrl = "wss://broker.hivemq.com:8884/mqtt";
+        const topicData = "sensor/esp8266_01/dht22";
+
+        const options = {
+            clientId: "microdz_dash_" + Math.random().toString(16).substr(2, 8),
+            clean: true,
+            connectTimeout: 5000
+        };
+
+        const statusText = document.getElementById("status-text");
+        const indicator  = document.getElementById("conn-indicator");
+        const tempEl     = document.getElementById("temp");
+        const humEl      = document.getElementById("hum");
+        const tempBar    = document.getElementById("temp-bar");
+        const humBar     = document.getElementById("hum-bar");
+        const lastSyncEl = document.getElementById("last-sync");
+
+        const client = mqtt.connect(brokerUrl, options);
+
+        client.on("connect", () => {
+            statusText.innerText = "CONNECTED";
+            statusText.className = "text-green-500";
+            indicator.innerText = "● ONLINE";
+            indicator.className = "text-green-500 animate-pulse";
+            client.subscribe(topicData);
+        });
+
+        client.on("message", (topic, message) => {
+            try {
+                const data = JSON.parse(message.toString());
+                const now = new Date();
+                const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
+                                now.getMinutes().toString().padStart(2, '0') + ":" + 
+                                now.getSeconds().toString().padStart(2, '0');
+
+                if (data.temperature !== undefined) {
+                    const t = data.temperature.toFixed(1);
+                    tempEl.innerText = t;
+                    const percent = Math.min(Math.max((t / 50) * 100, 0), 100);
+                    tempBar.style.width = percent + "%";
+                }
+
+                if (data.humidity !== undefined) {
+                    const h = data.humidity.toFixed(1);
+                    humEl.innerText = h;
+                    humBar.style.width = h + "%";
+                }
+
+                lastSyncEl.innerText = timeStr;
+            } catch (e) {
+                console.error("Payload_Error", e);
+            }
+        });
+
+        client.on("offline", () => {
+            statusText.innerText = "OFFLINE";
+            statusText.className = "text-red-500";
+            indicator.innerText = "● DISCONNECTED";
+            indicator.className = "text-red-500";
+        });
+    }
 </script>
 
 </body>
