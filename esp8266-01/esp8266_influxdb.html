@@ -1,22 +1,68 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>DHT22 Dashboard</title>
+<meta charset="UTF-8">
+<title>DHT22 History</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h2>Monitoring DHT22</h2>
-  <pre id="out">Loading...</pre>
+<canvas id="chart" width="800" height="400"></canvas>
 
-  <script>
-    fetch("https://esp8266-01.wahyu-ikhsannudin.workers.dev")
-      .then(res => res.text())
-      .then(data => {
-        document.getElementById("out").textContent = data;
-      })
-      .catch(err => {
-        document.getElementById("out").textContent = "Gagal ambil data";
-      });
-  </script>
+<script>
+const influxURL = "https://us-east-1-1.aws.cloud2.influxdata.com/api/v2/query?org=YOUR_ORG";
+const token = "YOUR_TOKEN";
+
+async function fetchData() {
+  const body = JSON.stringify({
+    query: 'from(bucket:"ESP8266-01") |> range(start:-6h) |> filter(fn:(r) => r._measurement=="dht22")'
+  });
+
+  const res = await fetch(influxURL, {
+    method: "POST",
+    headers: {
+      "Authorization": "Token " + token,
+      "Content-Type": "application/json"
+    },
+    body: body
+  });
+  const data = await res.json();
+  return data;
+}
+
+function parseData(data) {
+  // sesuaikan parsing JSON dari InfluxDB v3
+  const temperature = [];
+  const humidity = [];
+  const labels = [];
+  data.results[0].series.forEach(s => {
+    s.values.forEach(v => {
+      labels.push(new Date(v[0]*1000).toLocaleTimeString());
+      if (v[1] === "temperature") temperature.push(v[2]);
+      if (v[1] === "humidity") humidity.push(v[2]);
+    });
+  });
+  return { labels, temperature, humidity };
+}
+
+async function drawChart() {
+  const rawData = await fetchData();
+  const { labels, temperature, humidity } = parseData(rawData);
+
+  const ctx = document.getElementById('chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Temperature (°C)', data: temperature, borderColor: 'red', fill: false },
+        { label: 'Humidity (%)', data: humidity, borderColor: 'blue', fill: false }
+      ]
+    },
+    options: { responsive: true }
+  });
+}
+
+drawChart();
+</script>
 </body>
 </html>
