@@ -63,14 +63,12 @@ client.on('error', (err) => {
 client.on('message', (t, message) => {
   if(t !== topic) return;
   try {
-    // jika NodeMCU kirim array JSON 10 data terakhir
-    let dataArr = JSON.parse(message.toString());
-    // ambil data terakhir
-    let latest = dataArr[dataArr.length - 1];
-
-    tempSpan.textContent = latest.temperature.toFixed(1);
-    humSpan.textContent = latest.humidity.toFixed(1);
-
+    const dataArr = JSON.parse(message.toString()); // NodeMCU kirim array JSON
+    if(dataArr.length > 0){
+      const latest = dataArr[0]; // ambil data terbaru
+      tempSpan.textContent = latest.temperature.toFixed(1);
+      humSpan.textContent = latest.humidity.toFixed(1);
+    }
   } catch(e){
     console.error("Error parsing JSON:", e);
   }
