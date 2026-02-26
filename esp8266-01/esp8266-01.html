@@ -116,6 +116,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: opacity 0.5s ease;
         }
     </style>
 </head>
@@ -126,7 +127,7 @@
 <div id="auth-guard">
     <div class="text-center">
         <div class="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="text-xs text-cyan-500 tracking-[0.3em] font-bold uppercase animate-pulse">Verifying_Identity...</p>
+        <p id="guard-text" class="text-xs text-cyan-500 tracking-[0.3em] font-bold uppercase animate-pulse">Verifying_Identity...</p>
     </div>
 </div>
 
@@ -223,22 +224,33 @@
 
     /* ================= AUTH GUARD ================= */
     const authGuard = document.getElementById("auth-guard");
+    const guardText = document.getElementById("guard-text");
     const REDIRECT_URL = "https://brotherchiss.github.io/MicroDZ/index.html";
 
+    // Timeout safety: Jika dalam 8 detik tidak ada respon dari Firebase, paksa redirect
+    const authTimeout = setTimeout(() => {
+        guardText.innerText = "TIMEOUT: REDIRECTING...";
+        window.location.href = REDIRECT_URL;
+    }, 8000);
+
     onAuthStateChanged(auth, (user) => {
+        clearTimeout(authTimeout); // Batalkan timeout jika ada respon
+        
         if (!user) {
-            // Jika tidak login, kembalikan ke halaman eksternal GitHub
+            guardText.innerText = "ACCESS_DENIED";
             window.location.href = REDIRECT_URL;
         } else {
-            // Jika login, hilangkan guard dan mulai MQTT
-            authGuard.classList.add("hidden");
+            // Animasi transisi halus saat masuk
+            authGuard.style.opacity = "0";
+            setTimeout(() => {
+                authGuard.style.display = "none";
+            }, 500);
             initMQTT();
         }
     });
 
     /* ================= NAVIGATION ================= */
     document.getElementById("backBtn").onclick = () => {
-        // Kembali ke halaman terminal (GitHub index)
         window.location.href = REDIRECT_URL;
     };
 
