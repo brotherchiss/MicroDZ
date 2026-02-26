@@ -1,123 +1,257 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Monitoring Suhu & Kelembaban</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MicroDZ | Sensor Dashboard</title>
 
-  <!-- MQTT.js -->
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <!-- MQTT.js -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-green: #39ff14;
+            --dark-bg: #0a0b10;
+            --panel-bg: rgba(16, 18, 27, 0.8);
+            --border-color: rgba(0, 243, 255, 0.3);
+        }
 
-    .card {
-      background: #020617;
-      padding: 30px;
-      border-radius: 12px;
-      width: 320px;
-      text-align: center;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
+        body {
+            background-color: var(--dark-bg);
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 2px 2px, rgba(0, 243, 255, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
 
-    h1 {
-      font-size: 20px;
-      margin-bottom: 20px;
-    }
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
+        }
 
-    .value {
-      font-size: 42px;
-      font-weight: bold;
-    }
+        .microdz-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+        }
 
-    .label {
-      font-size: 14px;
-      opacity: 0.7;
-      margin-bottom: 15px;
-    }
+        .microdz-card::before {
+            content: "";
+            position: absolute;
+            top: -1px;
+            left: 20px;
+            width: 40px;
+            height: 2px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
 
-    .status {
-      margin-top: 15px;
-      font-size: 12px;
-      opacity: 0.6;
-    }
-  </style>
+        .label-tech {
+            font-size: 0.7rem;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: block;
+            opacity: 0.8;
+            letter-spacing: 1px;
+        }
+
+        .value-display {
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+        }
+
+        .status-bar {
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            border-top: 1px solid rgba(0, 243, 255, 0.1);
+        }
+
+        /* Scanline Effect */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            z-index: 50;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .glow-text-green { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
+        .glow-text-blue { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+    </style>
 </head>
-<body>
 
-  <div class="card">
-    <h1>ESP8266 DHT22</h1>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div class="label">Suhu</div>
-    <div class="value" id="temp">-- °C</div>
+<!-- CIRCUIT DECORATION -->
+<div class="fixed top-0 left-0 w-full h-full pointer-events-none opacity-20 overflow-hidden z-0">
+    <svg width="100%" height="100%">
+        <path d="M0 100 L100 100 L150 150 L300 150" stroke="#00f3ff" fill="none" stroke-width="1"/>
+        <path d="M100% 200 Lcalc(100% - 100px) 200 Lcalc(100% - 150px) 250" stroke="#00f3ff" fill="none" stroke-width="1"/>
+        <circle cx="300" cy="150" r="3" fill="#00f3ff"/>
+        <circle cx="0" cy="100" r="3" fill="#00f3ff"/>
+    </svg>
+</div>
 
-    <div class="label">Kelembaban</div>
-    <div class="value" id="hum">-- %</div>
+<header class="relative z-10 text-center mb-8">
+    <h1 class="text-4xl font-bold text-white mb-2">MICRODZ</h1>
+    <p class="text-[10px] text-cyan-500 tracking-[0.3em] font-bold uppercase">Telemetry_Control_v2.5</p>
+</header>
 
-    <div class="status" id="status">MQTT: connecting...</div>
-  </div>
+<main class="w-full max-w-[400px] relative z-10">
 
-  <script>
+    <div class="microdz-card p-6">
+        <h2 class="text-xs font-bold mb-6 text-cyan-400 border-b border-cyan-900 pb-2 flex justify-between items-center">
+            <span>> NODE_ESP8266_DHT22</span>
+            <span id="conn-indicator" class="animate-pulse">● CONNECTING</span>
+        </h2>
+
+        <!-- TEMPERATURE DISPLAY -->
+        <div class="mb-8 relative">
+            <label class="label-tech">Ambient_Temperature</label>
+            <div class="flex items-baseline">
+                <span id="temp" class="value-display text-5xl font-bold glow-text-blue">--</span>
+                <span class="text-xl ml-2 text-cyan-700 font-bold">°C</span>
+            </div>
+            <div class="w-full bg-cyan-900/30 h-1 mt-2">
+                <div id="temp-bar" class="bg-cyan-400 h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- HUMIDITY DISPLAY -->
+        <div class="mb-8">
+            <label class="label-tech">Air_Humidity</label>
+            <div class="flex items-baseline">
+                <span id="hum" class="value-display text-5xl font-bold glow-text-green">--</span>
+                <span class="text-xl ml-2 text-green-900 font-bold">%</span>
+            </div>
+            <div class="w-full bg-green-900/30 h-1 mt-2">
+                <div id="hum-bar" class="bg-green-400 h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- SYSTEM STATUS -->
+        <div class="status-bar pt-4 text-[9px] text-gray-500 uppercase flex flex-col gap-1">
+            <div class="flex justify-between">
+                <span>Signal_Protocol:</span>
+                <span class="text-cyan-400">MQTT/WSS</span>
+            </div>
+            <div class="flex justify-between">
+                <span>Broker_Link:</span>
+                <span id="status-text" class="text-yellow-500">Initializing...</span>
+            </div>
+            <div class="flex justify-between">
+                <span>Last_Sync:</span>
+                <span id="last-sync" class="text-gray-400">Never</span>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<footer class="mt-12 text-center relative z-10">
+    <div class="text-[9px] text-gray-600 mb-1">DATA_SOURCE: SENSOR/ESP8266_01/DHT22</div>
+    <p class="text-[10px] text-cyan-900 font-bold uppercase tracking-[0.2em]">© 2025 MicroDZ Digital Systems</p>
+</footer>
+
+<script>
     /* ================= MQTT CONFIG ================= */
     const brokerUrl = "wss://broker.hivemq.com:8884/mqtt";
     const topicData = "sensor/esp8266_01/dht22";
 
     const options = {
-      clientId: "web_" + Math.random().toString(16).substr(2, 8),
-      clean: true,
-      connectTimeout: 4000
+        clientId: "microdz_web_" + Math.random().toString(16).substr(2, 8),
+        clean: true,
+        connectTimeout: 5000
     };
 
-    /* ================= CONNECT ================= */
+    /* ================= UI ELEMENTS ================= */
+    const statusText = document.getElementById("status-text");
+    const indicator  = document.getElementById("conn-indicator");
+    const tempEl     = document.getElementById("temp");
+    const humEl      = document.getElementById("hum");
+    const tempBar    = document.getElementById("temp-bar");
+    const humBar     = document.getElementById("hum-bar");
+    const lastSyncEl = document.getElementById("last-sync");
+
+    /* ================= MQTT LOGIC ================= */
     const client = mqtt.connect(brokerUrl, options);
 
-    const statusEl = document.getElementById("status");
-    const tempEl   = document.getElementById("temp");
-    const humEl    = document.getElementById("hum");
-
     client.on("connect", () => {
-      statusEl.innerText = "MQTT: connected";
-      client.subscribe(topicData);
+        statusText.innerText = "CONNECTED";
+        statusText.className = "text-green-500";
+        indicator.innerText = "● ONLINE";
+        indicator.className = "text-green-500 animate-pulse";
+        client.subscribe(topicData);
+        console.log("Connected to MicroDZ Network");
     });
 
     client.on("reconnect", () => {
-      statusEl.innerText = "MQTT: reconnecting...";
+        statusText.innerText = "RECONNECTING...";
+        statusText.className = "text-yellow-500";
+        indicator.innerText = "● SYNC_LOSS";
+        indicator.className = "text-yellow-500 animate-pulse";
     });
 
     client.on("offline", () => {
-      statusEl.innerText = "MQTT: offline";
+        statusText.innerText = "OFFLINE";
+        statusText.className = "text-red-500";
+        indicator.innerText = "● DISCONNECTED";
+        indicator.className = "text-red-500";
+    });
+
+    client.on("message", (topic, message) => {
+        try {
+            const data = JSON.parse(message.toString());
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
+                            now.getMinutes().toString().padStart(2, '0') + ":" + 
+                            now.getSeconds().toString().padStart(2, '0');
+
+            if (data.temperature !== undefined) {
+                const t = data.temperature.toFixed(1);
+                tempEl.innerText = t;
+                // Progress bar mapping (0 to 50 degrees)
+                const percent = Math.min(Math.max((t / 50) * 100, 0), 100);
+                tempBar.style.width = percent + "%";
+            }
+
+            if (data.humidity !== undefined) {
+                const h = data.humidity.toFixed(1);
+                humEl.innerText = h;
+                // Progress bar mapping (0 to 100%)
+                humBar.style.width = h + "%";
+            }
+
+            lastSyncEl.innerText = timeStr;
+            
+            // Visual feedback on card update
+            indicator.style.opacity = "1";
+            setTimeout(() => { indicator.style.opacity = "0.7"; }, 200);
+
+        } catch (e) {
+            console.error("Payload_Corruption: Invalid JSON Structure", e);
+        }
     });
 
     client.on("error", (err) => {
-      statusEl.innerText = "MQTT error";
-      console.error(err);
+        statusText.innerText = "CORE_ERROR";
+        console.error("Critical System Error:", err);
     });
-
-    /* ================= RECEIVE DATA ================= */
-    client.on("message", (topic, message) => {
-      try {
-        const data = JSON.parse(message.toString());
-
-        if (data.temperature !== undefined) {
-          tempEl.innerText = data.temperature.toFixed(1) + " °C";
-        }
-
-        if (data.humidity !== undefined) {
-          humEl.innerText = data.humidity.toFixed(1) + " %";
-        }
-
-      } catch (e) {
-        console.error("Invalid JSON", e);
-      }
-    });
-  </script>
+</script>
 
 </body>
 </html>
